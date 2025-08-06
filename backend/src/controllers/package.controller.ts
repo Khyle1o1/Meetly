@@ -26,9 +26,6 @@ export const createPackageController = asyncHandlerAndValidation(
   CreatePackageDto,
   "body",
   async (req: Request, res: Response, createPackageDto) => {
-    console.log("Received package data:", req.body);
-    console.log("Transformed DTO:", createPackageDto);
-    
     const userId = req.user?.id as string;
 
     const package_ = await createPackageService(userId, createPackageDto);

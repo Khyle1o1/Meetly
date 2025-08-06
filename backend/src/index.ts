@@ -21,9 +21,9 @@ import schoolRoutes from "./routes/school.route";
 const app = express();
 const BASE_PATH = config.BASE_PATH;
 
-app.use(express.json());
-
-app.use(express.urlencoded({ extended: true }));
+// Optimize middleware order for better performance
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use(passport.initialize());
 
@@ -34,8 +34,12 @@ app.use(
   })
 );
 
-// Serve static files from uploads directory
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// Serve static files from uploads directory with caching
+app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
+  maxAge: '1d', // Cache static files for 1 day
+  etag: true,
+  lastModified: true,
+}));
 
 app.get(
   "/",
@@ -47,6 +51,7 @@ app.get(
   })
 );
 
+// Route registration
 app.use(`${BASE_PATH}/auth`, authRoutes);
 app.use(`${BASE_PATH}/event`, eventRoutes);
 app.use(`${BASE_PATH}/availability`, availabilityRoutes);
@@ -57,7 +62,17 @@ app.use(`${BASE_PATH}/school`, schoolRoutes);
 
 app.use(errorHandler);
 
-app.listen(config.PORT, async () => {
-  await initializeDatabase();
-  console.log(`Server listening on port ${config.PORT} in ${config.NODE_ENV}`);
-});
+// Optimize server startup
+const startServer = async () => {
+  try {
+    await initializeDatabase();
+    app.listen(config.PORT, () => {
+      console.log(`Server listening on port ${config.PORT} in ${config.NODE_ENV}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

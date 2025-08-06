@@ -13,7 +13,7 @@ export const getDatabaseConfig = () => {
     url: databaseUrl,
     entities: [path.join(__dirname, "../database/entities/*{.ts,.js}")],
     migrations: [path.join(__dirname, "../database/migrations/*{.ts,.js}")],
-    synchronize: !isProduction,
+    synchronize: false, // Disable synchronize for better performance
     logging: isProduction ? false : ["error"],
     ssl: isProduction
       ? {
@@ -22,6 +22,21 @@ export const getDatabaseConfig = () => {
       : {
           rejectUnauthorized: false,
         },
+    // Add connection pooling for better performance
+    extra: {
+      max: 20, // Maximum number of connections in the pool
+      min: 5,  // Minimum number of connections in the pool
+      acquireTimeoutMillis: 30000, // Maximum time to acquire a connection
+      createTimeoutMillis: 30000, // Maximum time to create a connection
+      destroyTimeoutMillis: 5000, // Maximum time to destroy a connection
+      idleTimeoutMillis: 30000, // Maximum time a connection can be idle
+      reapIntervalMillis: 1000, // How often to check for idle connections
+      createRetryIntervalMillis: 200, // Time to wait before retrying connection creation
+    },
+    // Enable query result caching
+    cache: {
+      duration: 30000, // Cache for 30 seconds
+    },
   });
 };
 

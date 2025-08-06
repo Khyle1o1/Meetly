@@ -48,6 +48,7 @@ export const getUserMeetingsService = async (
     where,
     relations: ["event"],
     order: { startTime: "ASC" },
+    cache: true, // Enable caching for this query
   });
 
   return meetings || [];
@@ -63,6 +64,7 @@ export const getPendingBookingsService = async (userId: string) => {
     },
     relations: ["event", "selectedPackage"],
     order: { createdAt: "DESC" },
+    cache: true, // Enable caching for this query
   });
 
   return meetings || [];
@@ -96,6 +98,7 @@ export const createMeetBookingForGuestService = async (
   const event = await eventRepository.findOne({
     where: { id: eventId, isPrivate: false },
     relations: ["user", "packages"],
+    select: ["id", "title", "locationType", "user"], // Only select needed fields
   });
 
   if (!event) throw new NotFoundException("Event not found");
@@ -105,6 +108,7 @@ export const createMeetBookingForGuestService = async (
   if (selectedPackageId) {
     selectedPackage = await packageRepository.findOne({
       where: { id: selectedPackageId, isActive: true },
+      select: ["id", "name", "price"], // Only select needed fields
     });
 
     if (!selectedPackage) {
@@ -132,6 +136,7 @@ export const createMeetBookingForGuestService = async (
           user: { id: event.user.id },
           app_type: IntegrationAppTypeEnum[event.locationType as keyof typeof IntegrationAppTypeEnum],
         },
+        select: ["id", "app_type", "access_token", "refresh_token", "expiry_date"], // Only select needed fields
       });
 
   if (!meetIntegration && event.locationType !== EventLocationEnumType.FACE_TO_FACE)
@@ -205,6 +210,7 @@ export const updateMeetingStatusService = async (
   const meeting = await meetingRepository.findOne({
     where: { id: meetingId },
     relations: ["event", "event.user", "selectedPackage"],
+    select: ["id", "status", "startTime", "endTime", "guestEmail", "firstName", "lastName", "adminMessage"], // Only select needed fields
   });
 
   if (!meeting) throw new NotFoundException("Meeting not found");
@@ -221,6 +227,7 @@ export const updateMeetingStatusService = async (
           user: { id: event.user.id },
           app_type: IntegrationAppTypeEnum[event.locationType as keyof typeof IntegrationAppTypeEnum],
         },
+        select: ["id", "app_type", "access_token", "refresh_token", "expiry_date"], // Only select needed fields
       });
 
       if (meetIntegration) {
@@ -294,6 +301,7 @@ export const cancelMeetingService = async (meetingId: string) => {
   const meeting = await meetingRepository.findOne({
     where: { id: meetingId },
     relations: ["event", "event.user"],
+    select: ["id", "calendarEventId", "calendarAppType", "status"], // Only select needed fields
   });
   if (!meeting) throw new NotFoundException("Meeting not found");
 
@@ -305,20 +313,8 @@ export const cancelMeetingService = async (meetingId: string) => {
             meeting.calendarAppType as keyof typeof IntegrationAppTypeEnum
           ],
       },
+      select: ["id", "app_type", "access_token", "refresh_token", "expiry_date"], // Only select needed fields
     });
-
-    // const calendarIntegration = await integrationRepository.findOne({
-    //   where: [
-    //     {
-    //       user: { id: meeting.event.user.id },
-    //       category: IntegrationCategoryEnum.CALENDAR_AND_VIDEO_CONFERENCING,
-    //     },
-    //     {
-    //       user: { id: meeting.event.user.id },
-    //       category: IntegrationCategoryEnum.CALENDAR,
-    //     },
-    //   ],
-    // });
 
     if (calendarIntegration) {
       const { calendar, calendarType } = await getCalendarClient(

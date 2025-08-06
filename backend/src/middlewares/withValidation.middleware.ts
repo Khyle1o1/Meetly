@@ -24,25 +24,19 @@ export function withValidation<T extends object>(
   ) {
     return async (req: Request, res: Response, next: NextFunction) => {
       try {
-        console.log("Raw request data:", req[source]);
-        
         const dtoInstance = plainToInstance(DtoClass, req[source], {
           enableImplicitConversion: true,
           exposeDefaultValues: true,
         });
         
-        console.log("Transformed DTO instance:", dtoInstance);
-        
         const errors = await validate(dtoInstance);
 
         if (errors.length > 0) {
-          console.log("Validation errors:", errors);
           return formatValidationError(res, errors);
         }
 
         return handler(req, res, dtoInstance);
       } catch (error) {
-        console.error("Validation middleware error:", error);
         next(error);
       }
     };

@@ -51,6 +51,7 @@ export const getUserEventsService = async (userId: string) => {
     .loadRelationCountAndMap("event._count.meetings", "event.meetings")
     .where("user.id = :userId", { userId })
     .orderBy("event.createdAt", "DESC")
+    .cache(true) // Enable caching for this query
     .getOne();
 
   if (!user) {
@@ -71,6 +72,7 @@ export const toggleEventPrivacyService = async (
 
   const event = await eventRepository.findOne({
     where: { id: eventId, user: { id: userId } },
+    select: ["id", "isPrivate"], // Only select needed fields
   });
 
   if (!event) {
@@ -106,6 +108,7 @@ export const getPublicEventsByUsernameService = async (username: string) => {
       "event.locationType",
     ])
     .orderBy("event.createdAt", "DESC")
+    .cache(true) // Enable caching for this query
     .getOne();
 
   if (!user) {
@@ -146,6 +149,7 @@ export const getPublicEventByUsernameAndSlugService = async (
       "event.locationType",
     ])
     .addSelect(["user.id", "user.name", "user.imageUrl"])
+    .cache(true) // Enable caching for this query
     .getOne();
 
   return event;
@@ -156,6 +160,7 @@ export const deleteEventService = async (userId: string, eventId: string) => {
 
   const event = await eventRepository.findOne({
     where: { id: eventId, user: { id: userId } },
+    select: ["id"], // Only select the id for deletion
   });
 
   if (!event) {
