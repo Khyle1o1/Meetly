@@ -170,3 +170,38 @@ export const deleteEventService = async (userId: string, eventId: string) => {
 
   return { success: true };
 };
+
+export const getAvailableEventsForUserService = async (userId: string, userEmail: string) => {
+  const eventRepository = AppDataSource.getRepository(Event);
+
+  // Get all public events from all users (excluding the current user's own events)
+  // and excluding events that the user has already booked
+  const events = await eventRepository
+    .createQueryBuilder("event")
+    .leftJoinAndSelect("event.user", "user")
+    .leftJoin("event.meetings", "meeting", "meeting.guestEmail = :userEmail", { userEmail })
+    .where("event.isPrivate = :isPrivate", { isPrivate: false })
+    .andWhere("user.id != :userId", { userId })
+    .andWhere("meeting.id IS NULL") // Exclude events that the user has already booked
+    .select([
+      "event.id",
+      "event.title",
+      "event.description",
+      "event.slug",
+      "event.duration",
+      "event.startDate",
+      "event.endDate",
+      "event.showDateRange",
+      "event.locationType",
+    ])
+    .addSelect([
+      "user.id",
+      "user.name",
+      "user.username",
+      "user.imageUrl",
+    ])
+    .orderBy("event.createdAt", "DESC")
+    .getMany();
+
+  return events;
+};

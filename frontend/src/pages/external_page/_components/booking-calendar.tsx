@@ -3,7 +3,7 @@ import { Calendar } from "@/components/calendar";
 import { CalendarDate, DateValue } from "@internationalized/date";
 import { useBookingState } from "@/hooks/use-booking-state";
 import { decodeSlot, formatSlot } from "@/lib/helper";
-import { getPublicAvailabilityByEventIdQueryFn } from "@/lib/api";
+import { getPublicAvailabilityByEventIdQueryFn, checkExistingBookingQueryFn } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { Loader } from "@/components/loader";
@@ -49,7 +49,47 @@ const BookingCalendar = ({
     queryFn: () => getPublicAvailabilityByEventIdQueryFn(eventId),
   });
 
+  // Check for existing booking if user is authenticated
+  const { data: existingBookingData } = useQuery({
+    queryKey: ["existing_booking", bookingUser?.email],
+    queryFn: () => checkExistingBookingQueryFn(bookingUser!.email),
+    enabled: !!bookingUser?.email,
+  });
+
   const availability = data?.data || [];
+
+  // Check if user has existing booking
+  const hasExistingBooking = existingBookingData?.hasExistingBooking;
+
+  // If user has existing booking, show message instead of calendar
+  if (hasExistingBooking && bookingUser) {
+    return (
+      <div className="w-full max-w-4xl mx-auto p-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+          <AlertCircle className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-yellow-800 mb-2">
+            Booking Already Exists
+          </h2>
+          <p className="text-yellow-700 mb-4">
+            You have already made a booking with this account. Only one booking per account is allowed.
+          </p>
+          {existingBookingData?.existingBooking && (
+            <div className="bg-white rounded-lg p-4 mb-4 text-left">
+              <h3 className="font-semibold text-gray-800 mb-2">Your Current Booking:</h3>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p><strong>Event:</strong> {existingBookingData.existingBooking.event?.title}</p>
+                <p><strong>Status:</strong> {existingBookingData.existingBooking.status}</p>
+                <p><strong>Created:</strong> {new Date(existingBookingData.existingBooking.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+          )}
+          <p className="text-sm text-yellow-600">
+            If you need to modify your booking, please contact the administrator.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Get time slots for the selected date
   const timeSlots = selectedDate

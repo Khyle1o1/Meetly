@@ -41,6 +41,7 @@ export type CreateEventPayloadType = {
 export interface UserType {
   name: string;
   imageUrl: string | null;
+  username: string;
 }
 export interface EventType {
   id: string;
@@ -104,7 +105,7 @@ export interface UserAvailabilityResponseType {
 }
 
 //************************* Meetings */
-type MeetingStatus = "SCHEDULED" | "CANCELLED" | "COMPLETED";
+type MeetingStatus = "PENDING" | "APPROVED" | "DECLINED" | "SCHEDULED" | "CANCELLED";
 
 export interface MeetingType {
   id: string;
@@ -123,6 +124,26 @@ export interface MeetingType {
 export interface UserMeetingsResponseType {
   message: string;
   meetings: MeetingType[];
+}
+
+export interface AvailableEventsResponseType {
+  message: string;
+  events: EventType[];
+}
+
+export interface IncompleteBookingsResponseType {
+  message: string;
+  incompleteBookings: MeetingType[];
+}
+
+export interface PendingBookingsResponseType {
+  message: string;
+  pendingBookings: MeetingType[];
+}
+
+export interface AllBookingsResponseType {
+  message: string;
+  allBookings: MeetingType[];
 }
 
 //************ALL PUBLIC API TYPES */

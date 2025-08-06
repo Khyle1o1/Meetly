@@ -14,6 +14,7 @@ import {
   getPublicEventsByUsernameService,
   getUserEventsService,
   toggleEventPrivacyService,
+  getAvailableEventsForUserService,
 } from "../services/event.service";
 import { asyncHandler } from "../middlewares/asyncHandler.middeware";
 
@@ -105,6 +106,19 @@ export const deleteEventController = asyncHandlerAndValidation(
     await deleteEventService(userId, eventIdDto.eventId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Event deleted successfully",
+    });
+  }
+);
+
+export const getAvailableEventsForUserController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = (req.user as any)?.id as string;
+    const userEmail = (req.user as any)?.email as string;
+    const events = await getAvailableEventsForUserService(userId, userEmail);
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Available events fetched successfully",
+      events,
     });
   }
 );

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { addMinutes, parseISO } from "date-fns";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useBookingState } from "@/hooks/use-booking-state";
 import { Fragment, useState, useEffect } from "react";
-import { CheckIcon, ArrowLeft, ArrowRight, CreditCard, User, Mail, Phone } from "lucide-react";
-import { scheduleMeetingMutationFn } from "@/lib/api";
+import { CheckIcon, ArrowLeft, ArrowRight, CreditCard, User, Mail, Phone, AlertCircle } from "lucide-react";
+import { scheduleMeetingMutationFn, checkExistingBookingQueryFn } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader } from "@/components/loader";
 import PackageSelection from "./package-selection";
@@ -44,6 +44,13 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
     mutationFn: scheduleMeetingMutationFn,
   });
 
+  // Check for existing booking if user is authenticated
+  const { data: existingBookingData } = useQuery({
+    queryKey: ["existing_booking", bookingUser?.email],
+    queryFn: () => checkExistingBookingQueryFn(bookingUser!.email),
+    enabled: !!bookingUser?.email,
+  });
+
   // Check if user is authenticated for booking (separate from admin auth)
   const isUserAuthenticatedForBooking = () => {
     // For booking, we need a separate authentication context
@@ -63,6 +70,39 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
   // If not authenticated for booking, don't render the form
   if (!isUserAuthenticatedForBooking()) {
     return null;
+  }
+
+  // Check if user has existing booking
+  const hasExistingBooking = existingBookingData?.hasExistingBooking;
+
+  // If user has existing booking, show message instead of form
+  if (hasExistingBooking && bookingUser) {
+    return (
+      <div className="max-w-md pt-6 px-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+          <AlertCircle className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-yellow-800 mb-2">
+            Booking Already Exists
+          </h2>
+          <p className="text-yellow-700 mb-4">
+            You have already made a booking with this account. Only one booking per account is allowed.
+          </p>
+          {existingBookingData?.existingBooking && (
+            <div className="bg-white rounded-lg p-4 mb-4 text-left">
+              <h3 className="font-semibold text-gray-800 mb-2">Your Current Booking:</h3>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p><strong>Event:</strong> {existingBookingData.existingBooking.event?.title}</p>
+                <p><strong>Status:</strong> {existingBookingData.existingBooking.status}</p>
+                <p><strong>Created:</strong> {new Date(existingBookingData.existingBooking.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+          )}
+          <p className="text-sm text-yellow-600">
+            If you need to modify your booking, please contact the administrator.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const bookingFormSchema = z.object({

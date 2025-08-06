@@ -6,6 +6,9 @@ import {
   getUserMeetingsController,
   getPendingBookingsController,
   updateMeetingStatusController,
+  getPendingBookingsForUserController,
+  getAllBookingsForUserController,
+  checkExistingBookingController,
 } from "../controllers/meeting.controller";
 import { passportAuthenticateJwt } from "../config/passport.config";
 import { HTTPSTATUS } from "../config/http.config";
@@ -51,9 +54,26 @@ meetingRoutes.get(
 );
 
 meetingRoutes.get(
-  "/user/pending",
+  "/admin/pending",
   passportAuthenticateJwt,
   getPendingBookingsController
+);
+
+meetingRoutes.get(
+  "/user/pending",
+  passportAuthenticateJwt,
+  getPendingBookingsForUserController
+);
+
+meetingRoutes.get(
+  "/user/bookings",
+  passportAuthenticateJwt,
+  getAllBookingsForUserController
+);
+
+meetingRoutes.get(
+  "/public/check-existing",
+  checkExistingBookingController
 );
 
 meetingRoutes.post(

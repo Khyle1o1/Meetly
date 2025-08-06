@@ -70,6 +70,55 @@ export const getPendingBookingsService = async (userId: string) => {
   return meetings || [];
 };
 
+export const getAllBookingsForUserService = async (userEmail: string) => {
+  const meetingRepository = AppDataSource.getRepository(Meeting);
+
+  const allBookings = await meetingRepository.find({
+    where: { guestEmail: userEmail },
+    relations: ["event", "event.user", "selectedPackage"],
+    order: { createdAt: "DESC" },
+  });
+
+  return allBookings || [];
+};
+
+export const getIncompleteBookingsService = async (userId: string, userEmail: string) => {
+  const meetingRepository = AppDataSource.getRepository(Meeting);
+
+  // Get pending bookings for the current user (as guest)
+  const pendingBookings = await meetingRepository.find({
+    where: { guestEmail: userEmail, status: MeetingStatus.PENDING },
+    relations: ["event", "event.user", "selectedPackage"],
+    order: { createdAt: "DESC" },
+  });
+
+  return pendingBookings || [];
+};
+
+export const getPendingBookingsForGuestService = async (userEmail: string) => {
+  const meetingRepository = AppDataSource.getRepository(Meeting);
+
+  const pendingBookings = await meetingRepository.find({
+    where: { guestEmail: userEmail, status: MeetingStatus.PENDING },
+    relations: ["event", "event.user", "selectedPackage"],
+    order: { createdAt: "DESC" },
+  });
+
+  return pendingBookings || [];
+};
+
+export const checkExistingBookingService = async (guestEmail: string) => {
+  const meetingRepository = AppDataSource.getRepository(Meeting);
+
+  const existingBooking = await meetingRepository.findOne({
+    where: { guestEmail },
+    select: ["id", "status", "createdAt", "event"],
+    relations: ["event"],
+  });
+
+  return existingBooking;
+};
+
 export const createMeetBookingForGuestService = async (
   createMeetingDto: CreateMeetingDto
 ) => {
@@ -94,6 +143,16 @@ export const createMeetBookingForGuestService = async (
   const integrationRepository = AppDataSource.getRepository(Integration);
   const meetingRepository = AppDataSource.getRepository(Meeting);
   const packageRepository = AppDataSource.getRepository(Package);
+
+  // Check if user has already made a booking
+  const existingBooking = await meetingRepository.findOne({
+    where: { guestEmail },
+    select: ["id", "status", "createdAt"],
+  });
+
+  if (existingBooking) {
+    throw new BadRequestException("You have already made a booking. Only one booking per account is allowed.");
+  }
 
   const event = await eventRepository.findOne({
     where: { id: eventId, isPrivate: false },

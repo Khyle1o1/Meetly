@@ -11,6 +11,9 @@ import {
   getUserMeetingsService,
   getPendingBookingsService,
   updateMeetingStatusService,
+  getPendingBookingsForGuestService,
+  getAllBookingsForUserService,
+  checkExistingBookingService,
 } from "../services/meeting.service";
 import { asyncHandlerAndValidation } from "../middlewares/withValidation.middleware";
 import { 
@@ -46,6 +49,42 @@ export const getPendingBookingsController = asyncHandler(
     res.status(HTTPSTATUS.OK).json({
       message: "Pending bookings fetched successfully",
       pendingBookings,
+    });
+    return;
+  }
+);
+
+export const getPendingBookingsForUserController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = (req.user as any)?.id as string;
+    const userEmail = (req.user as any)?.email as string;
+
+    const pendingBookings = await getPendingBookingsForGuestService(userEmail);
+
+    res.status(HTTPSTATUS.OK).json({
+      message: "Pending bookings fetched successfully",
+      pendingBookings,
+    });
+    return;
+  }
+);
+
+export const checkExistingBookingController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email } = req.query;
+
+    if (!email || typeof email !== 'string') {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        message: "Email parameter is required",
+      });
+    }
+
+    const existingBooking = await checkExistingBookingService(email);
+
+    res.status(HTTPSTATUS.OK).json({
+      message: "Booking check completed",
+      hasExistingBooking: !!existingBooking,
+      existingBooking: existingBooking || null,
     });
     return;
   }
@@ -126,5 +165,20 @@ export const cancelMeetingController = asyncHandlerAndValidation(
     return res.status(HTTPSTATUS.OK).json({
       message: "Meeting cancelled successfully",
     });
+  }
+);
+
+export const getAllBookingsForUserController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = (req.user as any)?.id as string;
+    const userEmail = (req.user as any)?.email as string;
+
+    const allBookings = await getAllBookingsForUserService(userEmail);
+
+    res.status(HTTPSTATUS.OK).json({
+      message: "All bookings fetched successfully",
+      allBookings,
+    });
+    return;
   }
 );

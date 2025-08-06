@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CalendarIcon, Clock } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Clock, Home } from "lucide-react";
 import { locationOptions } from "@/lib/types";
 import { useBookingState } from "@/hooks/use-booking-state";
 import { formatSelectedSlot } from "@/lib/helper";
@@ -65,7 +65,7 @@ const EventDetails = (props: {
                bg-clip-padding
                text-[rgb(0,105,255)] text-[24px]"
         >
-          <ArrowLeft />
+          {isSuccess ? <Home /> : <ArrowLeft />}
         </button>
 
         <div

@@ -18,6 +18,9 @@ import {
   SinglePackageResponseType,
   AssignPackagesToEventType,
   SelectPackageForBookingType,
+  AvailableEventsResponseType,
+  PendingBookingsResponseType,
+  AllBookingsResponseType,
 } from "@/types/api.type";
 import { API, PublicAPI } from "./axios-client";
 import { IntegrationAppType, VideoConferencingPlatform } from "./types";
@@ -96,8 +99,28 @@ export const getUserMeetingsQueryFn = async (
   return response.data;
 };
 
-export const getPendingBookingsQueryFn = async () => {
+export const getPendingBookingsQueryFn = async (): Promise<PendingBookingsResponseType> => {
+  const response = await API.get("/meeting/admin/pending");
+  return response.data;
+};
+
+export const getAllBookingsForUserQueryFn = async (): Promise<AllBookingsResponseType> => {
+  const response = await API.get("/meeting/user/bookings");
+  return response.data;
+};
+
+export const getPendingBookingsForUserQueryFn = async (): Promise<PendingBookingsResponseType> => {
   const response = await API.get("/meeting/user/pending");
+  return response.data;
+};
+
+export const checkExistingBookingQueryFn = async (email: string) => {
+  const response = await PublicAPI.get(`/meeting/public/check-existing?email=${encodeURIComponent(email)}`);
+  return response.data;
+};
+
+export const getAvailableEventsQueryFn = async (): Promise<AvailableEventsResponseType> => {
+  const response = await API.get("/event/available");
   return response.data;
 };
 

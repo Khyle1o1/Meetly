@@ -7,12 +7,14 @@ import {
   getPublicEventsByUsernameController,
   getUserEventsController,
   toggleEventPrivacyController,
+  getAvailableEventsForUserController,
 } from "../controllers/event.controller";
 
 const eventRoutes = Router();
 
 eventRoutes.post("/create", passportAuthenticateJwt, createEventController);
 eventRoutes.get("/all", passportAuthenticateJwt, getUserEventsController);
+eventRoutes.get("/available", passportAuthenticateJwt, getAvailableEventsForUserController);
 
 // for public without token
 eventRoutes.get("/public/:username", getPublicEventsByUsernameController);
