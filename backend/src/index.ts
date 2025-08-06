@@ -17,7 +17,6 @@ import integrationRoutes from "./routes/integration.route";
 import meetingRoutes from "./routes/meeting.route";
 import packageRoutes from "./routes/package.routes";
 import schoolRoutes from "./routes/school.route";
-import testRoutes from "./routes/test.route";
 
 const app = express();
 const BASE_PATH = config.BASE_PATH;
@@ -55,7 +54,6 @@ app.use(`${BASE_PATH}/integration`, integrationRoutes);
 app.use(`${BASE_PATH}/meeting`, meetingRoutes);
 app.use(`${BASE_PATH}/package`, packageRoutes);
 app.use(`${BASE_PATH}/school`, schoolRoutes);
-app.use(`${BASE_PATH}/test`, testRoutes);
 
 app.use(errorHandler);
 

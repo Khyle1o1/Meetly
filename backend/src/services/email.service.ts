@@ -1,32 +1,22 @@
 import nodemailer from "nodemailer";
 import { config } from "../config/app.config";
 
-// Create a test account for development (you can use Ethereal Email)
-const createTestAccount = async () => {
-  if (config.NODE_ENV === "development") {
-    return await nodemailer.createTestAccount();
-  }
-  return null;
-};
-
 // Create transporter
 const createTransporter = async () => {
   if (config.NODE_ENV === "development") {
-    const testAccount = await createTestAccount();
+    // For development, use Gmail SMTP with test credentials
     return nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
+      service: "gmail",
       auth: {
-        user: testAccount?.user,
-        pass: testAccount?.pass,
+        user: process.env.EMAIL_USER || "your-email@gmail.com",
+        pass: process.env.EMAIL_PASSWORD || "your-app-password",
       },
     });
   }
 
-  // For production, use your email service (Gmail, SendGrid, etc.)
+  // For production, use Gmail SMTP
   return nodemailer.createTransport({
-    service: "gmail", // or your email service
+    service: "gmail",
     auth: {
       user: process.env.EMAIL_USER || "your-email@gmail.com",
       pass: process.env.EMAIL_PASSWORD || "your-app-password",
@@ -100,17 +90,14 @@ export const sendBookingConfirmationEmail = async (
     `;
 
     const mailOptions = {
-      from: config.NODE_ENV === "development" ? "test@example.com" : (process.env.EMAIL_USER || "your-email@gmail.com"),
+      from: process.env.EMAIL_USER || "your-email@gmail.com",
       to,
       subject,
       html,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    
-    if (config.NODE_ENV === "development") {
-      console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    }
+    console.log("Email sent successfully to:", to);
     
     return info;
   } catch (error) {
@@ -164,17 +151,14 @@ export const sendBookingReceivedEmail = async (
     `;
 
     const mailOptions = {
-      from: config.NODE_ENV === "development" ? "test@example.com" : (process.env.EMAIL_USER || "your-email@gmail.com"),
+      from: process.env.EMAIL_USER || "your-email@gmail.com",
       to,
       subject,
       html,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    
-    if (config.NODE_ENV === "development") {
-      console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    }
+    console.log("Email sent successfully to:", to);
     
     return info;
   } catch (error) {

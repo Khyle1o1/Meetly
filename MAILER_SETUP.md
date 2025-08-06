@@ -2,7 +2,7 @@
 
 ## Overview
 
-Your Meetly project already has a well-structured email service using **Nodemailer**. This guide will help you configure it for both development and production environments.
+Your Meetly project has a well-structured email service using **Nodemailer** with **Gmail SMTP**. This guide will help you configure it for both development and production environments.
 
 ## Current Setup
 
@@ -10,8 +10,8 @@ Your Meetly project already has a well-structured email service using **Nodemail
 - Nodemailer package installed (`nodemailer: ^7.0.5`)
 - Email service in `backend/src/services/email.service.ts`
 - Two email functions: `sendBookingConfirmationEmail` and `sendBookingReceivedEmail`
-- Development mode uses Ethereal Email for testing
-- Production mode supports Gmail and other email services
+- Gmail SMTP configuration for both development and production
+- Professional HTML email templates
 
 ## Step 1: Environment Variables
 
@@ -38,88 +38,56 @@ GOOGLE_REDIRECT_URI="http://localhost:8000/api/integration/google/callback"
 FRONTEND_ORIGIN=http://localhost:5173
 FRONTEND_INTEGRATION_URL="http://localhost:5173/app/integrations"
 
-# Email Configuration
+# Email Configuration (Gmail SMTP)
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASSWORD=your-app-password
 ```
 
-## Step 2: Development Setup (Ethereal Email)
+## Step 2: Gmail Setup
 
-For development, the mailer automatically uses **Ethereal Email** (a fake SMTP service):
+### 1. Enable 2-Factor Authentication
+- Go to your Google Account settings
+- Navigate to Security → 2-Step Verification
+- Enable 2-Factor Authentication if not already enabled
 
-1. **No additional setup required** - it works out of the box
-2. **Preview emails** - Check your console for preview URLs when emails are sent
-3. **Test emails** - All emails are captured and can be viewed in the browser
+### 2. Generate an App Password
+- Go to Google Account settings
+- Security → 2-Step Verification → App passwords
+- Select "Mail" as the app
+- Generate a 16-digit password
+- Copy this password (you'll only see it once)
 
-## Step 3: Production Setup
-
-### Option A: Gmail (Recommended for beginners)
-
-1. **Enable 2-Factor Authentication** on your Gmail account
-2. **Generate an App Password:**
-   - Go to Google Account settings
-   - Security → 2-Step Verification → App passwords
-   - Generate a password for "Mail"
-3. **Update your `.env`:**
-   ```env
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASSWORD=your-16-digit-app-password
-   ```
-
-### Option B: SendGrid (Recommended for production)
-
-1. **Sign up for SendGrid** (free tier available)
-2. **Verify your sender email**
-3. **Generate an API key**
-4. **Update the email service configuration:**
-
-```typescript
-// In backend/src/services/email.service.ts, replace the production transporter:
-return nodemailer.createTransport({
-  host: "smtp.sendgrid.net",
-  port: 587,
-  secure: false,
-  auth: {
-    user: "apikey",
-    pass: process.env.SENDGRID_API_KEY,
-  },
-});
+### 3. Update Your Environment Variables
+```env
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-16-digit-app-password
 ```
 
-5. **Add to your `.env`:**
-   ```env
-   SENDGRID_API_KEY=your-sendgrid-api-key
-   ```
+## Step 3: Testing the Mailer
 
-### Option C: Other Email Services
-
-The mailer supports any SMTP service. Common alternatives:
-- **Mailgun**
-- **Amazon SES**
-- **Postmark**
-- **Resend**
-
-## Step 4: Testing the Mailer
-
-### Test in Development
-
-1. **Start your backend:**
+### Method 1: Create a Test Booking
+1. Start your backend:
    ```bash
    cd backend
    npm run dev
    ```
 
-2. **Trigger an email** (when a booking is created/updated)
-3. **Check console** for preview URL
-4. **Open the URL** to see the email
+2. Go to your frontend application
+3. Create a test booking through the UI
+4. Check your email inbox for the confirmation email
 
-### Test in Production
+### Method 2: Check Console Logs
+When emails are sent, you'll see:
+```
+Email sent successfully to: user@example.com
+```
 
-1. **Set `NODE_ENV=production`** in your environment
-2. **Configure your email service** (Gmail, SendGrid, etc.)
-3. **Test by creating a booking**
+### Method 3: Verify Email Delivery
+- Check your Gmail inbox
+- Look for emails from your configured `EMAIL_USER`
+- Verify the HTML formatting is correct
 
-## Step 5: Email Templates
+## Step 4: Email Templates
 
 Your current email templates are in `backend/src/services/email.service.ts`:
 
@@ -134,7 +102,7 @@ The HTML templates are embedded in the functions. You can:
 2. **Create separate template files** for better organization
 3. **Use a template engine** like Handlebars or EJS
 
-## Step 6: Adding New Email Types
+## Step 5: Adding New Email Types
 
 To add new email types, follow this pattern:
 
@@ -157,17 +125,14 @@ export const sendNewEmailType = async (
     `;
 
     const mailOptions = {
-      from: config.NODE_ENV === "development" ? "test@example.com" : process.env.EMAIL_USER,
+      from: process.env.EMAIL_USER,
       to,
       subject,
       html,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    
-    if (config.NODE_ENV === "development") {
-      console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    }
+    console.log("Email sent successfully to:", to);
     
     return info;
   } catch (error) {
@@ -183,20 +148,21 @@ export const sendNewEmailType = async (
 
 1. **"Invalid login" error:**
    - Check your email/password
-   - For Gmail, ensure you're using an App Password, not your regular password
+   - Ensure you're using an App Password, not your regular password
+   - Verify 2-Factor Authentication is enabled
 
 2. **"Connection timeout":**
    - Check your internet connection
-   - Verify SMTP settings
+   - Verify Gmail SMTP settings are correct
 
-3. **"Preview URL not showing":**
-   - Ensure `NODE_ENV=development`
-   - Check console for any errors
+3. **"Email not sending":**
+   - Verify environment variables are set correctly
+   - Check that `EMAIL_USER` and `EMAIL_PASSWORD` are in your `.env`
+   - Ensure the email address is valid
 
-4. **"Email not sending in production":**
-   - Verify environment variables are set
-   - Check email service credentials
-   - Ensure `NODE_ENV=production`
+4. **"Authentication failed":**
+   - Make sure you're using an App Password, not your regular Gmail password
+   - Regenerate the App Password if needed
 
 ### Debug Mode:
 
@@ -204,7 +170,11 @@ Add this to see detailed SMTP logs:
 
 ```typescript
 const transporter = nodemailer.createTransport({
-  // ... your config
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
+  },
   debug: true, // Enable debug output
   logger: true // Log to console
 });
@@ -218,11 +188,51 @@ const transporter = nodemailer.createTransport({
 4. **Rate limit** email sending to prevent abuse
 5. **Validate email addresses** before sending
 
-## Next Steps
+## Production Deployment
 
-1. **Choose your email service** (Gmail for testing, SendGrid for production)
-2. **Set up environment variables**
-3. **Test in development mode**
-4. **Deploy and test in production**
+### 1. Set Production Environment
+```env
+NODE_ENV=production
+```
 
-Your mailer is now ready to send beautiful, professional emails for your Meetly booking system! 🎉 
+### 2. Configure Production Email
+- Use the same Gmail setup as development
+- Ensure `EMAIL_USER` and `EMAIL_PASSWORD` are set in your hosting platform
+- Test email delivery in production
+
+### 3. Monitor Email Delivery
+- Check your Gmail sent folder
+- Monitor for any bounce-backs
+- Set up email delivery monitoring if needed
+
+## Alternative Email Services
+
+If you prefer other email services:
+
+### SendGrid
+```typescript
+return nodemailer.createTransport({
+  host: "smtp.sendgrid.net",
+  port: 587,
+  secure: false,
+  auth: {
+    user: "apikey",
+    pass: process.env.SENDGRID_API_KEY,
+  },
+});
+```
+
+### Mailgun
+```typescript
+return nodemailer.createTransport({
+  host: "smtp.mailgun.org",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.MAILGUN_USER,
+    pass: process.env.MAILGUN_PASS,
+  },
+});
+```
+
+Your mailer is now configured to use Gmail SMTP and ready to send professional emails for your Meetly booking system! 🎉 
