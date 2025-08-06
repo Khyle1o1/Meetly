@@ -14,6 +14,10 @@ import {
   UserAvailabilityResponseType,
   UserEventListResponse,
   UserMeetingsResponseType,
+  PackageResponseType,
+  SinglePackageResponseType,
+  AssignPackagesToEventType,
+  SelectPackageForBookingType,
 } from "@/types/api.type";
 import { API, PublicAPI } from "./axios-client";
 import { IntegrationAppType, VideoConferencingPlatform } from "./types";
@@ -126,5 +130,42 @@ export const getPublicAvailabilityByEventIdQueryFn = async (
 //Create Meeting Eventid
 export const scheduleMeetingMutationFn = async (data: CreateMeetingType) => {
   const response = await API.post("/meeting/public/create", data);
+  return response.data;
+};
+
+//*********** */ PACKAGE APIS
+export const getPackagesQueryFn = async (): Promise<PackageResponseType> => {
+  const response = await API.get("/package");
+  return response.data;
+};
+
+export const createPackageMutationFn = async (data: any): Promise<SinglePackageResponseType> => {
+  console.log("Creating package with data:", data);
+  const response = await API.post("/package", data);
+  return response.data;
+};
+
+export const updatePackageMutationFn = async ({ id, data }: { id: string; data: any }): Promise<SinglePackageResponseType> => {
+  const response = await API.put(`/package/${id}`, data);
+  return response.data;
+};
+
+export const deletePackageMutationFn = async (id: string): Promise<{ message: string }> => {
+  const response = await API.delete(`/package/${id}`);
+  return response.data;
+};
+
+export const assignPackagesToEventMutationFn = async (data: AssignPackagesToEventType): Promise<{ message: string; event: any }> => {
+  const response = await API.post("/package/assign-to-event", data);
+  return response.data;
+};
+
+export const getEventPackagesQueryFn = async (eventId: string): Promise<PackageResponseType> => {
+  const response = await API.get(`/package/event/${eventId}`);
+  return response.data;
+};
+
+export const selectPackageForBookingMutationFn = async ({ meetingId, packageId }: { meetingId: string; packageId: string }): Promise<{ message: string; meeting: any }> => {
+  const response = await API.post(`/package/meeting/${meetingId}/select`, { packageId });
   return response.data;
 };

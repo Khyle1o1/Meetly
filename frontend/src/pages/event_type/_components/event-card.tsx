@@ -4,10 +4,11 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ENV } from "@/lib/get-env";
 import { cn } from "@/lib/utils";
-import { CopyIcon } from "lucide-react";
+import { CopyIcon, PackageIcon } from "lucide-react";
 import { FC, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import PackageAssignmentModal from "./package-assignment-modal";
 
 interface PropsType {
   id: string;
@@ -21,6 +22,7 @@ interface PropsType {
 }
 
 const EventCard: FC<PropsType> = ({
+  id,
   title,
   duration,
   slug,
@@ -30,6 +32,7 @@ const EventCard: FC<PropsType> = ({
   onToggle,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
+  const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
   const event_link = `${ENV.VITE_APP_ORIGIN}/${username}/${slug}`;
 
   const handleCopyLink = () => {
@@ -44,6 +47,7 @@ const EventCard: FC<PropsType> = ({
         console.error("Failed to copy link:", error);
       });
   };
+
   return (
     <div>
       <Card
@@ -99,17 +103,31 @@ const EventCard: FC<PropsType> = ({
           className="p-[12px_8px_12px_16px] 
         border-t border-[#D4E162] h-full flex items-center justify-between"
         >
-          <Button
-            variant="ghost"
-            disabled={isPrivate}
-            className="flex items-center gap-2 cursor-pointer font-light text-sm text-[rgb(0,105,255)]
-            disabled:text-[rgba(26,26,26,0.61)] disabled:bg-[#e7edf6] disabled:opacity-100
-                      "
-            onClick={handleCopyLink}
-          >
-            <CopyIcon className="w-4 h-4" />
-            <span>{isCopied ? "Copied!" : "Copy link"}</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              disabled={isPrivate}
+              className="flex items-center gap-2 cursor-pointer font-light text-sm text-[rgb(0,105,255)]
+              disabled:text-[rgba(26,26,26,0.61)] disabled:bg-[#e7edf6] disabled:opacity-100
+                        "
+              onClick={handleCopyLink}
+            >
+              <CopyIcon className="w-4 h-4" />
+              <span>{isCopied ? "Copied!" : "Copy link"}</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              disabled={isPrivate}
+              className="flex items-center gap-2 cursor-pointer font-light text-sm text-[rgb(0,105,255)]
+              disabled:text-[rgba(26,26,26,0.61)] disabled:bg-[#e7edf6] disabled:opacity-100
+                        "
+              onClick={() => setIsPackageModalOpen(true)}
+            >
+              <PackageIcon className="w-4 h-4" />
+              <span>Packages</span>
+            </Button>
+          </div>
 
           <Button
             variant="outline"
@@ -128,6 +146,13 @@ const EventCard: FC<PropsType> = ({
           </Button>
         </CardFooter>
       </Card>
+
+      <PackageAssignmentModal
+        isOpen={isPackageModalOpen}
+        onClose={() => setIsPackageModalOpen(false)}
+        eventId={id}
+        eventTitle={title}
+      />
     </div>
   );
 };

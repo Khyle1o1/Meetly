@@ -9,6 +9,7 @@ import {
 import { User } from "./user.entity";
 import { Event } from "./event.entity";
 import { IntegrationAppTypeEnum } from "./integration.entity";
+import { Package } from "./package.entity";
 
 export enum MeetingStatus {
   SCHEDULED = "SCHEDULED",
@@ -56,6 +57,9 @@ export class Meeting {
     default: MeetingStatus.SCHEDULED,
   })
   status: MeetingStatus;
+
+  @ManyToOne(() => Package, (package_) => package_.meetings, { nullable: true })
+  selectedPackage: Package;
 
   @CreateDateColumn()
   createdAt: Date;

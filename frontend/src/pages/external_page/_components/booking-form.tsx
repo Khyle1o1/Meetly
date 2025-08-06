@@ -15,16 +15,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useBookingState } from "@/hooks/use-booking-state";
-import { Fragment } from "react/jsx-runtime";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { CheckIcon, ExternalLink } from "lucide-react";
 import { scheduleMeetingMutationFn } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader } from "@/components/loader";
+import PackageSelection from "./package-selection";
+import { Package } from "@/types/package.type";
 
 const BookingForm = (props: { eventId: string; duration: number }) => {
   const { eventId, duration } = props;
   const [meetLink, setMeetLink] = useState("");
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
 
   const { selectedDate, isSuccess, selectedSlot, handleSuccess } =
     useBookingState();
@@ -52,16 +54,14 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
 
   const onSubmit = (values: BookingFormData) => {
     if (!eventId || !selectedSlot || !selectedDate) return;
+    
     // Decode the selected slot to get the slotDate
-    // (e.g., "2025-03-20T14:00:00.000Z")
     const decodedSlotDate = decodeURIComponent(selectedSlot);
 
     // Parse the slotDate into a Date object using date-fns
     const startTime = parseISO(decodedSlotDate);
 
-    // Calculate the end time by adding the
-    // duration of event (in minutes)
-    // to the start time
+    // Calculate the end time by adding the duration of event (in minutes) to the start time
     const endTime = addMinutes(startTime, duration);
 
     const payload = {
@@ -69,6 +69,7 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
       eventId,
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
+      selectedPackageId: selectedPackage?.id, // Include selected package
     };
     console.log("Form Data:", payload);
 
@@ -99,7 +100,14 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
             You are scheduled
           </h2>
           <p className="mb-4">Your meeting has been scheduled successfully.</p>
-          <p className="flex items-center text-sm  justify-center gap-2 mb-4">
+          {selectedPackage && (
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Selected Package:</strong> {selectedPackage.name} - ₱{selectedPackage.price}
+              </p>
+            </div>
+          )}
+          <p className="flex items-center text-sm justify-center gap-2 mb-4">
             Copy link:
             <span className="font-normal text-primary">{meetLink}</span>
           </p>
@@ -113,6 +121,14 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
       ) : (
         <Fragment>
           <h2 className="text-xl font-bold mb-6">Enter Details</h2>
+          
+          {/* Package Selection */}
+          <PackageSelection
+            eventId={eventId}
+            onPackageSelect={setSelectedPackage}
+            selectedPackage={selectedPackage}
+          />
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {/* Name Field */}

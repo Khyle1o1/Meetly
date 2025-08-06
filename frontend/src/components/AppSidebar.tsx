@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   LinkIcon,
   LucideIcon,
+  PackageIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,6 +40,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Event types",
       url: PROTECTED_ROUTES.EVENT_TYPES,
       icon: LinkIcon,
+    },
+    {
+      title: "Packages",
+      url: PROTECTED_ROUTES.PACKAGES,
+      icon: PackageIcon,
     },
     {
       title: "Meetings",

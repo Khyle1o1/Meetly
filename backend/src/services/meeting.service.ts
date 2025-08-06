@@ -15,6 +15,7 @@ import {
   IntegrationAppTypeEnum,
   IntegrationCategoryEnum,
 } from "../database/entities/integration.entity";
+import { Package } from "../database/entities/package.entity";
 import { BadRequestException, NotFoundException } from "../utils/app-error";
 import { validateGoogleToken } from "./integration.service";
 import { googleOAuth2Client } from "../config/oauth.config";
@@ -53,20 +54,42 @@ export const getUserMeetingsService = async (
 export const createMeetBookingForGuestService = async (
   createMeetingDto: CreateMeetingDto
 ) => {
-  const { eventId, guestEmail, guestName, additionalInfo } = createMeetingDto;
+  const { eventId, guestEmail, guestName, additionalInfo, selectedPackageId } = createMeetingDto;
   const startTime = new Date(createMeetingDto.startTime);
   const endTime = new Date(createMeetingDto.endTime);
 
   const eventRepository = AppDataSource.getRepository(Event);
   const integrationRepository = AppDataSource.getRepository(Integration);
   const meetingRepository = AppDataSource.getRepository(Meeting);
+  const packageRepository = AppDataSource.getRepository(Package);
 
   const event = await eventRepository.findOne({
     where: { id: eventId, isPrivate: false },
-    relations: ["user"],
+    relations: ["user", "packages"],
   });
 
   if (!event) throw new NotFoundException("Event not found");
+
+  // Handle package selection if provided
+  let selectedPackage: Package | null = null;
+  if (selectedPackageId) {
+    selectedPackage = await packageRepository.findOne({
+      where: { id: selectedPackageId, isActive: true },
+    });
+
+    if (!selectedPackage) {
+      throw new BadRequestException("Selected package not found or inactive");
+    }
+
+    // Verify the package is assigned to this event
+    const isPackageAssignedToEvent = event.packages.some(
+      (pkg) => pkg.id === selectedPackageId
+    );
+
+    if (!isPackageAssignedToEvent) {
+      throw new BadRequestException("Selected package is not available for this event");
+    }
+  }
 
   if (!Object.values(EventLocationEnumType).includes(event.locationType)) {
     throw new BadRequestException("Invalid location type");
@@ -135,6 +158,7 @@ export const createMeetBookingForGuestService = async (
     meetLink: meetLink,
     calendarEventId: calendarEventId,
     calendarAppType: calendarAppType,
+    selectedPackage: selectedPackage ? { id: selectedPackage.id } : undefined,
   });
 
   await meetingRepository.save(meeting);

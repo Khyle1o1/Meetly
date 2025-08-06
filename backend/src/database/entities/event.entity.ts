@@ -6,10 +6,13 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
 } from "typeorm";
 import { IntegrationAppTypeEnum } from "./integration.entity";
 import { User } from "./user.entity";
 import { Meeting } from "./meeting.entity";
+import { Package } from "./package.entity";
 
 export enum EventLocationEnumType {
   FACE_TO_FACE = "FACE_TO_FACE",
@@ -54,6 +57,20 @@ export class Event {
 
   @OneToMany(() => Meeting, (meeting) => meeting.event)
   meetings: Meeting[];
+
+  @ManyToMany(() => Package, (package_) => package_.events)
+  @JoinTable({
+    name: "event_packages",
+    joinColumn: {
+      name: "eventId",
+      referencedColumnName: "id",
+    },
+    inverseJoinColumn: {
+      name: "packageId",
+      referencedColumnName: "id",
+    },
+  })
+  packages: Package[];
 
   @CreateDateColumn()
   createdAt: Date;

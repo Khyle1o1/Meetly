@@ -1,4 +1,5 @@
 import { IntegrationAppType, VideoConferencingPlatform } from "@/lib/types";
+import { Package } from "./package.type";
 
 export type loginType = { email: string; password: string };
 export type LoginResponseType = {
@@ -160,3 +161,23 @@ export interface CreateMeetingType {
 }
 
 export type PeriodType = "UPCOMING" | "PAST" | "CANCELLED";
+
+//*********** PACKAGE TYPES */
+export interface PackageResponseType {
+  message: string;
+  packages: Package[];
+}
+
+export interface SinglePackageResponseType {
+  message: string;
+  package: Package;
+}
+
+export interface AssignPackagesToEventType {
+  eventId: string;
+  packageIds: string[];
+}
+
+export interface SelectPackageForBookingType {
+  packageId: string;
+}

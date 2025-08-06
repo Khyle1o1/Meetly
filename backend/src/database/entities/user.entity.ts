@@ -15,6 +15,7 @@ import { Integration } from "./integration.entity";
 import { Event } from "./event.entity";
 import { Availability } from "./availability.entity";
 import { Meeting } from "./meeting.entity";
+import { Package } from "./package.entity";
 
 @Entity({ name: "users" })
 export class User {
@@ -56,6 +57,11 @@ export class User {
     cascade: true,
   })
   meetings: Meeting[];
+
+  @OneToMany(() => Package, (package_) => package_.user, {
+    cascade: true,
+  })
+  packages: Package[];
 
   @CreateDateColumn()
   createdAt: Date;

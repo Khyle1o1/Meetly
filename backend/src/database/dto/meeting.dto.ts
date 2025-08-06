@@ -31,6 +31,10 @@ export class CreateMeetingDto {
   @IsString()
   @IsOptional()
   additionalInfo: string;
+
+  @IsUUID(4)
+  @IsOptional()
+  selectedPackageId?: string;
 }
 
 export class MeetingIdDTO {

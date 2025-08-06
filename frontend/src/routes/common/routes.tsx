@@ -5,6 +5,7 @@ import EventType from "@/pages/event_type";
 import Meetings from "@/pages/meeting";
 import Availability from "@/pages/availability";
 import Integrations from "@/pages/integrations";
+import Packages from "@/pages/packages";
 import UserEventsPage from "@/pages/external_page/user-events";
 import UserSingleEventPage from "@/pages/external_page/user-single-event";
 
@@ -18,6 +19,7 @@ export const protectedRoutePaths = [
   { path: PROTECTED_ROUTES.MEETINGS, element: <Meetings /> },
   { path: PROTECTED_ROUTES.AVAILBILITIY, element: <Availability /> },
   { path: PROTECTED_ROUTES.INTEGRATIONS, element: <Integrations /> },
+  { path: PROTECTED_ROUTES.PACKAGES, element: <Packages /> },
 ];
 
 export const publicRoutePaths = [
