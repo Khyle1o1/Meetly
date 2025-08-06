@@ -4,6 +4,7 @@ import { locationOptions } from "@/lib/types";
 import { useBookingState } from "@/hooks/use-booking-state";
 import { formatSelectedSlot } from "@/lib/helper";
 import { UserType } from "@/types/api.type";
+import { format } from "date-fns";
 
 const EventDetails = (props: {
   eventTitle: string;
@@ -12,6 +13,9 @@ const EventDetails = (props: {
   username: string;
   duration: number;
   eventLocationType: string;
+  startDate?: string;
+  endDate?: string;
+  showDateRange?: boolean;
 }) => {
   const {
     eventTitle,
@@ -20,6 +24,9 @@ const EventDetails = (props: {
     username,
     user,
     eventLocationType,
+    startDate,
+    endDate,
+    showDateRange,
   } = props;
 
   const navigate = useNavigate();
@@ -99,6 +106,16 @@ const EventDetails = (props: {
               <div className="flex justify-start text-[15px] gap-2 items-center">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">{duration} Minutes</span>
+              </div>
+            )}
+
+            {/* Show date range only if showDateRange is true */}
+            {showDateRange && startDate && endDate && (
+              <div className="flex justify-start text-[15px] gap-2 items-start">
+                <CalendarIcon className="w-4 h-4 shrink-0 mt-1" />
+                <span className="font-medium">
+                  Available: {format(new Date(startDate), "MMM dd")} - {format(new Date(endDate), "MMM dd, yyyy")}
+                </span>
               </div>
             )}
 

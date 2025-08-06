@@ -22,11 +22,20 @@ export const createEventService = async (
 
   const slug = slugify(createEventDto.title);
 
-  const event = eventRepository.create({
-    ...createEventDto,
+  // Convert string dates to Date objects if provided
+  const eventData: Partial<Event> = {
+    title: createEventDto.title,
+    description: createEventDto.description,
+    duration: createEventDto.duration,
+    locationType: createEventDto.locationType,
     slug,
-    user: { id: userId },
-  });
+    user: { id: userId } as User,
+    startDate: createEventDto.startDate ? new Date(createEventDto.startDate) : undefined,
+    endDate: createEventDto.endDate ? new Date(createEventDto.endDate) : undefined,
+    showDateRange: createEventDto.showDateRange || false,
+  };
+
+  const event = eventRepository.create(eventData);
 
   await eventRepository.save(event);
 
@@ -91,6 +100,9 @@ export const getPublicEventsByUsernameService = async (username: string) => {
       "event.description",
       "event.slug",
       "event.duration",
+      "event.startDate",
+      "event.endDate",
+      "event.showDateRange",
       "event.locationType",
     ])
     .orderBy("event.createdAt", "DESC")
@@ -128,6 +140,9 @@ export const getPublicEventByUsernameAndSlugService = async (
       "event.description",
       "event.slug",
       "event.duration",
+      "event.startDate",
+      "event.endDate",
+      "event.showDateRange",
       "event.locationType",
     ])
     .addSelect(["user.id", "user.name", "user.imageUrl"])

@@ -99,7 +99,17 @@ export const getAvailabilityForPublicEventService = async (eventId: string) => {
 
   for (const dayOfWeek of daysOfWeek) {
     const nextDate = getNextDateForDay(dayOfWeek);
-    //console.log(nextDate, dayOfWeek, "nextDate");
+
+    // Check if the date is within the event's date range (if showDateRange is true)
+    if (event.showDateRange && event.startDate && event.endDate) {
+      const startDate = new Date(event.startDate);
+      const endDate = new Date(event.endDate);
+      
+      // If the next occurrence of this day is outside the configured range, skip it
+      if (nextDate < startDate || nextDate > endDate) {
+        continue;
+      }
+    }
 
     const dayAvailability = availability.days.find((d) => d.day === dayOfWeek);
     if (dayAvailability) {

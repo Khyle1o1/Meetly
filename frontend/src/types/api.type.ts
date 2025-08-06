@@ -23,6 +23,9 @@ export type CreateEventPayloadType = {
   title: string;
   description: string;
   duration: number;
+  startDate?: string;
+  endDate?: string;
+  showDateRange?: boolean;
   locationType: VideoConferencingPlatform;
 };
 
@@ -35,6 +38,9 @@ export interface EventType {
   title: string;
   description: string;
   duration: number;
+  startDate?: string;
+  endDate?: string;
+  showDateRange?: boolean;
   slug: string;
   isPrivate: boolean;
   locationType: VideoConferencingPlatform;

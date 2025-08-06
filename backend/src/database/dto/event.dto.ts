@@ -5,6 +5,8 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  IsDateString,
+  IsBoolean,
 } from "class-validator";
 import { EventLocationEnumType } from "../entities/event.entity";
 
@@ -20,6 +22,18 @@ export class CreateEventDto {
   @IsNumber()
   @IsNotEmpty()
   duration: number;
+
+  @IsDateString()
+  @IsOptional()
+  startDate?: string;
+
+  @IsDateString()
+  @IsOptional()
+  endDate?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  showDateRange?: boolean;
 
   @IsEnum(EventLocationEnumType)
   @IsNotEmpty()

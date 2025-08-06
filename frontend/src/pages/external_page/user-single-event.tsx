@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { useParams } from "react-router-dom";
-import { today } from "@internationalized/date";
+import { today, parseDate } from "@internationalized/date";
 import { useQuery } from "@tanstack/react-query";
 import PageContainer from "./_components/page-container";
 import BookingCalendar from "./_components/booking-calendar";
@@ -30,6 +30,31 @@ const UserSingleEventPage = () => {
 
   const event = data?.event;
 
+  // Calculate the minimum date for the calendar
+  const getMinValue = () => {
+    if (event?.showDateRange && event?.startDate) {
+      // Use the event's start date as minimum
+      const startDate = new Date(event.startDate);
+      return parseDate(startDate.toISOString().split('T')[0]);
+    }
+    // Default to today
+    return today(timezone);
+  };
+
+  // Calculate the default value for the calendar
+  const getDefaultValue = () => {
+    if (event?.showDateRange && event?.startDate) {
+      const startDate = new Date(event.startDate);
+      const todayDate = new Date();
+      
+      // If start date is in the future, use start date; otherwise use today
+      if (startDate > todayDate) {
+        return parseDate(startDate.toISOString().split('T')[0]);
+      }
+    }
+    return today(timezone);
+  };
+
   return (
     <PageContainer
       isLoading={isLoading}
@@ -57,6 +82,9 @@ const UserSingleEventPage = () => {
               eventLocationType={event?.locationType}
               username={username || ""}
               duration={event?.duration}
+              startDate={event?.startDate}
+              endDate={event?.endDate}
+              showDateRange={event?.showDateRange}
             />
             {/* {Calendar & Booking form} */}
             {/* {Calendar & Booking form} */}
@@ -71,8 +99,11 @@ const UserSingleEventPage = () => {
                   {/* {Booking Calendar} */}
                   <BookingCalendar
                     eventId={event.id}
-                    minValue={today(timezone)}
-                    defaultValue={today(timezone)}
+                    minValue={getMinValue()}
+                    defaultValue={getDefaultValue()}
+                    startDate={event.startDate}
+                    endDate={event.endDate}
+                    showDateRange={event.showDateRange}
                   />
                 </Fragment>
               )}

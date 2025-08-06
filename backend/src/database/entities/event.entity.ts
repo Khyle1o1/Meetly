@@ -31,6 +31,15 @@ export class Event {
   @Column({ default: 30 })
   duration: number;
 
+  @Column({ nullable: true })
+  startDate: Date;
+
+  @Column({ nullable: true })
+  endDate: Date;
+
+  @Column({ default: false })
+  showDateRange: boolean;
+
   @Column({ nullable: false })
   slug: string;
 

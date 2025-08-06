@@ -29,6 +29,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateEventMutationFn } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader } from "@/components/loader";
+import { Switch } from "@/components/ui/switch";
 
 const NewEventDialog = (props: { btnVariant?: string }) => {
   const { btnVariant } = props;
@@ -50,11 +51,22 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
       .int({ message: "Duration must be a number" })
       .min(1, "Duration is required"),
     description: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    showDateRange: z.boolean().optional(),
     locationType: z
       .enum([VideoConferencingPlatform.FACE_TO_FACE])
       .refine((value) => value !== undefined, {
         message: "Location type is required",
       }),
+  }).refine((data) => {
+    if (data.startDate && data.endDate) {
+      return new Date(data.startDate) <= new Date(data.endDate);
+    }
+    return true;
+  }, {
+    message: "End date must be after start date",
+    path: ["endDate"],
   });
 
   type EventFormData = z.infer<typeof eventSchema>;
@@ -66,6 +78,9 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
       title: "",
       duration: 30,
       description: "",
+      startDate: "",
+      endDate: "",
+      showDateRange: false,
     },
   });
 
@@ -84,6 +99,9 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
         ...data,
         duration: data.duration,
         description: data.description || "",
+        startDate: data.startDate || undefined,
+        endDate: data.endDate || undefined,
+        showDateRange: data.showDateRange || false,
       },
       {
         onSuccess: () => {
@@ -166,7 +184,7 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
                 control={form.control}
                 render={({ field }) => (
                   <FormItem>
-                    <Label className="font-semibold !text-base">Duration</Label>
+                    <Label className="font-semibold !text-base">Duration (minutes)</Label>
                     <FormControl className="mt-2">
                       <Input
                         {...field}
@@ -181,6 +199,66 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  name="startDate"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label className="font-semibold !text-base">Start Date</Label>
+                      <FormControl className="mt-2">
+                        <Input
+                          {...field}
+                          type="date"
+                          placeholder="Start date"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="endDate"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label className="font-semibold !text-base">End Date (optional)</Label>
+                      <FormControl className="mt-2">
+                        <Input
+                          {...field}
+                          type="date"
+                          placeholder="End date"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                name="showDateRange"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <Label className="text-base font-semibold">
+                        Show date range to public
+                      </Label>
+                      <div className="text-sm text-muted-foreground">
+                        Make the event's date range visible to users when booking
+                      </div>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />

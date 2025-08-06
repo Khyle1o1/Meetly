@@ -13,12 +13,18 @@ interface BookingCalendarProps {
   eventId: string;
   minValue?: DateValue;
   defaultValue?: DateValue;
+  startDate?: string;
+  endDate?: string;
+  showDateRange?: boolean;
 }
 
 const BookingCalendar = ({
   eventId,
   minValue,
   defaultValue,
+  startDate,
+  endDate,
+  showDateRange,
 }: BookingCalendarProps) => {
   const {
     timezone,
@@ -48,11 +54,21 @@ const BookingCalendar = ({
     : [];
 
   const isDateUnavailable = (date: DateValue) => {
+    const dateObj = date.toDate(timezone);
+    
+    // Check if date is within the configured date range (if showDateRange is true)
+    if (showDateRange && startDate && endDate) {
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      
+      // If date is outside the configured range, mark it as unavailable
+      if (dateObj < startDateObj || dateObj > endDateObj) {
+        return true;
+      }
+    }
+    
     // Get the day of the week (e.g., "MONDAY")
-    const dayOfWeek = format(
-      date.toDate(timezone), // the same as getLocalTimeZone()
-      "EEEE"
-    ).toUpperCase();
+    const dayOfWeek = format(dateObj, "EEEE").toUpperCase();
     // Check if the day is available
     const dayAvailability = availability.find((day) => day.day === dayOfWeek);
     return !dayAvailability?.isAvailable;
