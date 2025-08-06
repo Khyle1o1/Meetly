@@ -11,24 +11,16 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useBookingState } from "@/hooks/use-booking-state";
 import { Fragment, useState, useEffect } from "react";
-import { CheckIcon, ArrowLeft, ArrowRight, CreditCard } from "lucide-react";
+import { CheckIcon, ArrowLeft, ArrowRight, CreditCard, User, Mail, Phone } from "lucide-react";
 import { scheduleMeetingMutationFn } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader } from "@/components/loader";
 import PackageSelection from "./package-selection";
 import { Package } from "@/types/package.type";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import PaymentUploadMandatory from "./payment-upload-mandatory";
 import PaymentInstructions from "./payment-instructions";
 import { useBookingStore } from "@/store/booking-store";
@@ -74,13 +66,6 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
   }
 
   const bookingFormSchema = z.object({
-    lastName: z.string().min(1, "Last name is required"),
-    firstName: z.string().min(1, "First name is required"),
-    middleName: z.string().optional(),
-    contactNumber: z.string().min(1, "Contact number is required"),
-    guestEmail: z.string().email("Invalid email address"),
-    schoolName: z.string().min(1, "School name is required"),
-    yearLevel: z.string().min(1, "Year level is required"),
     additionalInfo: z.string().optional(),
   });
 
@@ -89,19 +74,12 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
-      lastName: "",
-      firstName: "",
-      middleName: "",
-      contactNumber: "",
-      guestEmail: "",
-      schoolName: "",
-      yearLevel: "",
       additionalInfo: "",
     },
   });
 
   const onSubmit = async (values: BookingFormData) => {
-    if (!eventId || !selectedSlot || !selectedDate) return;
+    if (!eventId || !selectedSlot || !selectedDate || !bookingUser) return;
     
     // Validate payment proof is uploaded
     if (!selectedFile) {
@@ -125,14 +103,12 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
     formData.append("eventId", eventId);
     formData.append("startTime", startTime.toISOString());
     formData.append("endTime", endTime.toISOString());
-    formData.append("guestName", `${values.firstName} ${values.lastName}`);
-    formData.append("guestEmail", values.guestEmail);
-    formData.append("lastName", values.lastName);
-    formData.append("firstName", values.firstName);
-    if (values.middleName) formData.append("middleName", values.middleName);
-    formData.append("contactNumber", values.contactNumber);
-    formData.append("schoolName", values.schoolName);
-    formData.append("yearLevel", values.yearLevel);
+    formData.append("guestName", bookingUser.name);
+    formData.append("guestEmail", bookingUser.email);
+    formData.append("lastName", bookingUser.lastName || "");
+    formData.append("firstName", bookingUser.firstName || "");
+    if (bookingUser.middleName) formData.append("middleName", bookingUser.middleName);
+    formData.append("contactNumber", bookingUser.phoneNumber || "");
     if (values.additionalInfo) formData.append("additionalInfo", values.additionalInfo);
     if (selectedPackage?.id) formData.append("selectedPackageId", selectedPackage.id);
     formData.append("paymentProof", selectedFile);
@@ -154,22 +130,13 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
   };
 
   const handleNextStep = () => {
-    // Validate current step before proceeding
+    // For Step 1, only validate that a package is selected
     if (currentStep === 1) {
-      const isValid = form.trigger([
-        "lastName",
-        "firstName", 
-        "contactNumber",
-        "guestEmail",
-        "schoolName",
-        "yearLevel"
-      ]);
-      
-      isValid.then((valid) => {
-        if (valid) {
-          setCurrentStep(2);
-        }
-      });
+      if (selectedPackage) {
+        setCurrentStep(2);
+      } else {
+        toast.error("Please select a package to continue");
+      }
     }
   };
 
@@ -177,19 +144,6 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
     setCurrentStep(1);
     setPaymentError("");
   };
-
-  const yearLevelOptions = [
-    "Junior High School",
-    "Senior High School", 
-    "College",
-    "Post-Grad"
-  ];
-
-  const schoolOptions = [
-    "BukSU",
-    "BNHS",
-    "Other"
-  ];
 
   return (
     <div className="max-w-md pt-6 px-6">
@@ -226,7 +180,7 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
                   1
                 </div>
                 <span className={`font-medium ${currentStep >= 1 ? 'text-blue-600' : 'text-gray-500'}`}>
-                  Personal Details
+                  Package Selection
                 </span>
               </div>
               <div className="flex-1 h-0.5 bg-gray-200 mx-4"></div>
@@ -247,8 +201,36 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
           </div>
 
           <h2 className="text-xl font-bold mb-6">
-            {currentStep === 1 ? "Enter Your Details" : "Complete Payment"}
+            {currentStep === 1 ? "Select Your Package" : "Complete Payment"}
           </h2>
+          
+          {/* User Information Display */}
+          {bookingUser && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                <User className="w-4 h-4 mr-2" />
+                Booking for:
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-600 w-20">Name:</span>
+                  <span className="text-gray-800">{bookingUser.name}</span>
+                </div>
+                <div className="flex items-center">
+                  <Mail className="w-4 h-4 mr-2 text-gray-500" />
+                  <span className="font-medium text-gray-600 w-20">Email:</span>
+                  <span className="text-gray-800">{bookingUser.email}</span>
+                </div>
+                {bookingUser.phoneNumber && (
+                  <div className="flex items-center">
+                    <Phone className="w-4 h-4 mr-2 text-gray-500" />
+                    <span className="font-medium text-gray-600 w-20">Phone:</span>
+                    <span className="text-gray-800">{bookingUser.phoneNumber}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           
           {/* Package Selection - Show on both steps */}
           <PackageSelection
@@ -260,154 +242,14 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {currentStep === 1 ? (
-                // Step 1: Personal Details
+                // Step 1: Package Selection Only
                 <div className="space-y-4">
-                  {/* Last Name Field */}
-                  <FormField
-                    name="lastName"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Label className="font-semibold !text-base text-[#0a2540]">
-                          Last Name *
-                        </Label>
-                        <FormControl className="mt-1">
-                          <Input placeholder="Enter your last name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* First Name Field */}
-                  <FormField
-                    name="firstName"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Label className="font-semibold !text-base text-[#0a2540]">
-                          First Name *
-                        </Label>
-                        <FormControl className="mt-1">
-                          <Input placeholder="Enter your first name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Middle Name Field */}
-                  <FormField
-                    name="middleName"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Label className="font-semibold !text-base text-[#0a2540]">
-                          Middle Name
-                        </Label>
-                        <FormControl className="mt-1">
-                          <Input placeholder="Enter your middle name (optional)" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Contact Number Field */}
-                  <FormField
-                    name="contactNumber"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Label className="font-semibold !text-base text-[#0a2540]">
-                          Contact Number *
-                        </Label>
-                        <FormControl className="mt-1">
-                          <Input placeholder="Enter your contact number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Email Field */}
-                  <FormField
-                    name="guestEmail"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Label className="font-semibold !text-base text-[#0a2540]">
-                          Email Address *
-                        </Label>
-                        <FormControl className="mt-1">
-                          <Input placeholder="Enter your email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* School Name Field */}
-                  <FormField
-                    name="schoolName"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Label className="font-semibold !text-base text-[#0a2540]">
-                          Name of School *
-                        </Label>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select your school" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {schoolOptions.map((school) => (
-                              <SelectItem key={school} value={school}>
-                                {school}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Year Level Field */}
-                  <FormField
-                    name="yearLevel"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Label className="font-semibold !text-base text-[#0a2540]">
-                          Year Level *
-                        </Label>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select your year level" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {yearLevelOptions.map((level) => (
-                              <SelectItem key={level} value={level}>
-                                {level}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   {/* Next Button */}
                   <Button 
                     type="button" 
                     onClick={handleNextStep}
                     className="w-full"
+                    disabled={!selectedPackage}
                   >
                     Next <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>

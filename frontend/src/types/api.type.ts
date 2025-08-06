@@ -9,6 +9,10 @@ export type LoginResponseType = {
     name: string;
     username: string;
     email: string;
+    firstName: string;
+    lastName: string;
+    middleName?: string;
+    phoneNumber?: string;
   };
   accessToken: string;
   expiresAt: number;

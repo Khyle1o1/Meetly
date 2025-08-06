@@ -131,6 +131,10 @@ export function BookingAuth({ onBack }: BookingAuthProps) {
           id: user.id,
           name: user.name,
           email: user.email,
+          firstName: user.firstName || "",
+          lastName: user.lastName || "",
+          middleName: user.middleName,
+          phoneNumber: user.phoneNumber,
         });
         setBookingToken(accessToken);
         setBookingExpiresAt(expiresAt);

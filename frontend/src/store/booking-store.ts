@@ -7,6 +7,10 @@ type BookingUserType = {
   id: string;
   name: string;
   email: string;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  phoneNumber?: string;
 };
 
 type BookingAuthState = {
