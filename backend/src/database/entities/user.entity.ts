@@ -25,6 +25,15 @@ export class User {
   @Column({ nullable: false })
   name: string;
 
+  @Column({ nullable: false })
+  firstName: string;
+
+  @Column({ nullable: false })
+  lastName: string;
+
+  @Column({ nullable: true })
+  middleName: string;
+
   @Column({ nullable: false, unique: true })
   username: string;
 
@@ -33,6 +42,9 @@ export class User {
 
   @Column({ nullable: false })
   password: string;
+
+  @Column({ nullable: true })
+  phoneNumber: string;
 
   @Column({ nullable: true })
   imageUrl: string;

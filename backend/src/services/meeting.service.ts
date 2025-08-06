@@ -48,7 +48,7 @@ export const getUserMeetingsService = async (
     where,
     relations: ["event"],
     order: { startTime: "ASC" },
-    cache: true, // Enable caching for this query
+    // cache: true, // Temporarily disabled caching
   });
 
   return meetings || [];
@@ -64,7 +64,7 @@ export const getPendingBookingsService = async (userId: string) => {
     },
     relations: ["event", "selectedPackage"],
     order: { createdAt: "DESC" },
-    cache: true, // Enable caching for this query
+    // cache: true, // Temporarily disabled caching
   });
 
   return meetings || [];

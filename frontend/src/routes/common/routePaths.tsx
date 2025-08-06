@@ -5,6 +5,7 @@ export const isAuthRoute = (pathname: string): boolean => {
 export const AUTH_ROUTES = {
   SIGN_IN: "/",
   SIGN_UP: "/sign-up",
+  BOOKING_AUTH: "/auth",
 };
 
 export const PROTECTED_ROUTES = {

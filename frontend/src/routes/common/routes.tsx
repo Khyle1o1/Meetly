@@ -9,6 +9,7 @@ import Packages from "@/pages/packages";
 import PendingBookings from "@/pages/admin/pending-bookings";
 import UserEventsPage from "@/pages/external_page/user-events";
 import UserSingleEventPage from "@/pages/external_page/user-single-event";
+import BookingAuthPage from "@/pages/external_page/booking-auth-page";
 
 export const authenticationRoutePaths = [
   { path: AUTH_ROUTES.SIGN_IN, element: <SignIn /> },
@@ -27,4 +28,5 @@ export const protectedRoutePaths = [
 export const publicRoutePaths = [
   { path: PUBLIC_ROUTES.USER_EVENTS, element: <UserEventsPage /> },
   { path: PUBLIC_ROUTES.USER_SINGLE_EVENT, element: <UserSingleEventPage /> },
+  { path: AUTH_ROUTES.BOOKING_AUTH, element: <BookingAuthPage /> },
 ];

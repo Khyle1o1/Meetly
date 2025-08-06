@@ -33,10 +33,10 @@ export const getDatabaseConfig = () => {
       reapIntervalMillis: 1000, // How often to check for idle connections
       createRetryIntervalMillis: 200, // Time to wait before retrying connection creation
     },
-    // Enable query result caching
-    cache: {
-      duration: 30000, // Cache for 30 seconds
-    },
+    // Temporarily disable query result caching until cache table is created
+    // cache: {
+    //   duration: 30000, // Cache for 30 seconds
+    // },
   });
 };
 

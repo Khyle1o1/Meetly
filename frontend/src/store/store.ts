@@ -4,6 +4,7 @@ import { devtools, persist } from "zustand/middleware";
 import createSelectors from "./selectors";
 
 type UserType = {
+  id: string;
   name: string;
   username: string;
   email: string;

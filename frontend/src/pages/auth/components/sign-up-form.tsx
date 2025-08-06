@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Command } from "lucide-react";
+import { Command, User, Mail, Phone, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +22,11 @@ import { Loader } from "@/components/loader";
 
 // Define the form schema using Zod
 const signUpSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address."),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  middleName: z.string().optional(),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+  phoneNumber: z.string().min(1, "Phone number is required"),
   password: z.string().min(6, "Password must be at least 6 characters."),
 });
 
@@ -41,10 +44,13 @@ export function SignUpForm({
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
-    mode: "onChange",
+    mode: "onSubmit",
     defaultValues: {
+      firstName: "",
+      lastName: "",
+      middleName: "",
       email: "",
-      name: "",
+      phoneNumber: "",
       password: "",
     },
   });
@@ -66,49 +72,118 @@ export function SignUpForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6 w-full", className)} {...props}>
+    <div className={cn("flex flex-col gap-8 w-full", className)} {...props}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* { Top Header} */}
-          <div className="flex flex-col items-center gap-2">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {/* Header */}
+          <div className="flex flex-col items-center gap-4">
             <Link
               to="/"
-              className="flex flex-col items-center gap-2 font-medium"
+              className="flex flex-col items-center gap-3 font-medium"
             >
-              <div
-                className="flex aspect-square size-8 items-center 
-          justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
-              >
-                <Command className="size-5" />
+              <div className="flex aspect-square size-12 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
+                <Command className="size-6" />
               </div>
               <span className="sr-only">Meetly</span>
             </Link>
-            <h2 className="text-xl font-bold text-[#0a2540]">
-              Sign up with Meetly for free
-            </h2>
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Sign up with Meetly for free
+              </h2>
+              <p className="text-gray-600 text-lg">
+                Create your account to start scheduling meetings
+              </p>
+            </div>
           </div>
 
-          <div
-            className="w-full bg-white flex flex-col gap-5 rounded-[6px] p-[38px_28px]"
-            style={{
-              boxShadow: "rgba(0, 74, 116, 0.15) 0px 1px 5px",
-              border: "1px solid #d4e0ed",
-            }}
-          >
-            <div className="flex flex-col gap-4">
+          {/* Form Container */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            <div className="space-y-6">
+              {/* Name Fields Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  name="firstName"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label className="text-sm font-semibold text-gray-700 flex items-center">
+                        <User className="w-4 h-4 mr-2" />
+                        First Name
+                      </Label>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="text"
+                          placeholder="John"
+                          className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="lastName"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label className="text-sm font-semibold text-gray-700 flex items-center">
+                        <User className="w-4 h-4 mr-2" />
+                        Last Name
+                      </Label>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="text"
+                          placeholder="Doe"
+                          className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="middleName"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label className="text-sm font-semibold text-gray-700 flex items-center">
+                        <User className="w-4 h-4 mr-2" />
+                        Middle Name
+                      </Label>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="text"
+                          placeholder="Michael (optional)"
+                          className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Email Field */}
               <FormField
                 name="email"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem>
-                    <Label className="font-semibold !text-sm">
-                      Enter your email to get started
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center">
+                      <Mail className="w-4 h-4 mr-2" />
+                      Email Address
                     </Label>
                     <FormControl>
                       <Input
                         {...field}
                         type="email"
-                        placeholder="subcribeto@techwithemma.com"
+                        placeholder="john.doe@example.com"
+                        className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
                       />
                     </FormControl>
                     <FormMessage />
@@ -116,35 +191,45 @@ export function SignUpForm({
                 )}
               />
 
+              {/* Phone Number Field */}
               <FormField
-                name="name"
+                name="phoneNumber"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem>
-                    <Label className="font-semibold !text-sm">
-                      Enter your full name
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center">
+                      <Phone className="w-4 h-4 mr-2" />
+                      Phone Number
                     </Label>
                     <FormControl>
-                      <Input {...field} type="text" placeholder="John Doe" />
+                      <Input
+                        {...field}
+                        type="tel"
+                        placeholder="+1 (555) 123-4567"
+                        className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Password Field */}
               <FormField
                 name="password"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem>
-                    <Label className="font-semibold !text-sm">
-                      Choose a password with at least 6 characters
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center">
+                      <Lock className="w-4 h-4 mr-2" />
+                      Password
                     </Label>
                     <FormControl>
                       <Input
                         {...field}
                         type="password"
-                        placeholder="password"
+                        placeholder="Enter your password"
+                        className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
                       />
                     </FormControl>
                     <FormMessage />
@@ -152,29 +237,50 @@ export function SignUpForm({
                 )}
               />
 
-              <div className="flex items-center justify-end">
-                <Button disabled={isPending} type="submit">
-                  {isPending ? <Loader size="sm" color="white" /> : "Signup"}
-                </Button>
-              </div>
+              {/* Submit Button */}
+              <Button
+                disabled={isPending}
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                {isPending ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader size="sm" color="white" />
+                    <span>Creating Account...</span>
+                  </div>
+                ) : (
+                  "Create Account"
+                )}
+              </Button>
             </div>
 
-            <div className="text-center text-sm">
-              Already have an account?{" "}
-              <Link
-                to={AUTH_ROUTES.SIGN_IN}
-                className="underline underline-offset-4 text-primary"
-              >
-                Sign in
-              </Link>
+            {/* Sign In Link */}
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <div className="text-center text-gray-600">
+                Already have an account?{" "}
+                <Link
+                  to={AUTH_ROUTES.SIGN_IN}
+                  className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2 transition-colors"
+                >
+                  Sign in
+                </Link>
+              </div>
             </div>
           </div>
         </form>
       </Form>
 
-      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+      {/* Terms and Privacy */}
+      <div className="text-balance text-center text-sm text-gray-500">
+        By clicking continue, you agree to our{" "}
+        <a href="#" className="text-blue-600 hover:text-blue-700 underline underline-offset-2">
+          Terms of Service
+        </a>{" "}
+        and{" "}
+        <a href="#" className="text-blue-600 hover:text-blue-700 underline underline-offset-2">
+          Privacy Policy
+        </a>
+        .
       </div>
     </div>
   );

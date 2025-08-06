@@ -8,6 +8,9 @@ import { useQuery } from "@tanstack/react-query";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { Loader } from "@/components/loader";
 import HourButton from "@/components/HourButton";
+import { useBookingStore } from "@/store/booking-store";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
 
 interface BookingCalendarProps {
   eventId: string;
@@ -36,6 +39,10 @@ const BookingCalendar = ({
     handleNext,
     setHourType,
   } = useBookingState();
+
+  const { bookingToken, bookingUser } = useBookingStore();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { data, isFetching, isError, error } = useQuery({
     queryKey: ["availbility_single_event", eventId],
@@ -80,6 +87,39 @@ const BookingCalendar = ({
     handleSelectDate(calendarDate); // Update useBookingState hook
   };
 
+  // Check if user is authenticated for booking (separate from admin auth)
+  const isUserAuthenticatedForBooking = () => {
+    // For booking, we need a separate authentication context
+    // Admin authentication doesn't count for booking purposes
+    return !!(bookingToken && bookingUser);
+  };
+
+  const handleSelectSlotWithAuth = (slot: string) => {
+    // Always require booking authentication, regardless of admin login
+    if (!isUserAuthenticatedForBooking()) {
+      // Redirect to booking auth with return URL
+      const returnUrl = location.pathname + location.search;
+      navigate(`/auth?returnUrl=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+    
+    // If authenticated for booking, proceed with slot selection
+    handleSelectSlot(slot);
+  };
+
+  const handleNextWithAuth = () => {
+    // Always require booking authentication, regardless of admin login
+    if (!isUserAuthenticatedForBooking()) {
+      // Redirect to booking auth with return URL
+      const returnUrl = location.pathname + location.search;
+      navigate(`/auth?returnUrl=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+    
+    // If authenticated for booking, proceed with next step
+    handleNext();
+  };
+
   const selectedTime = decodeSlot(selectedSlot, timezone, hourType);
 
   return (
@@ -93,6 +133,19 @@ const BookingCalendar = ({
 
       <div className="flex flex-col h-full mx-auto pt-[25px]">
         <h2 className="text-xl mb-5 font-bold">Select a Date &amp; Time</h2>
+        
+        {/* Authentication Notice - Show only if not authenticated for booking */}
+        {!isUserAuthenticatedForBooking() && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-blue-600" />
+              <p className="text-sm text-blue-800">
+                Please create an account to continue your booking.
+              </p>
+            </div>
+          </div>
+        )}
+        
         <div className="w-full flex flex-col md:flex-row lg:flex-[1_1_300px]">
           <div className="w-full flex justify-start max-w-xs md:max-w-full lg:max-w-sm">
             <Calendar
@@ -158,7 +211,7 @@ const BookingCalendar = ({
                           <button
                             type="button"
                             className="w-full cursor-pointer h-[52px] bg-[rgb(0,105,255)] text-white rounded-[4px] hover:bg-[rgba(0,105,255,0.8)] font-semibold tracking-wide"
-                            onClick={handleNext}
+                            onClick={handleNextWithAuth}
                           >
                             Next
                           </button>
@@ -176,7 +229,7 @@ const BookingCalendar = ({
                              : "opacity-100"
                          }
                            `}
-                          onClick={() => handleSelectSlot(slot)}
+                          onClick={() => handleSelectSlotWithAuth(slot)}
                         >
                           {formattedSlot}
                         </button>

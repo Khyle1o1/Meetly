@@ -28,9 +28,15 @@ export const registerService = async (registerDto: RegisterDto) => {
     throw new BadRequestException("User already exists");
   }
 
-  const username = await generateUsername(registerDto.name);
+  // Construct full name from firstName, lastName, and middleName
+  const fullName = [registerDto.firstName, registerDto.middleName, registerDto.lastName]
+    .filter(Boolean)
+    .join(" ");
+
+  const username = await generateUsername(fullName);
   const user = userRepository.create({
     ...registerDto,
+    name: fullName, // Set the name field for backward compatibility
     username,
   });
 

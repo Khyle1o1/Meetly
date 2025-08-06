@@ -12,7 +12,13 @@
     "db:migrate": "npm run typeorm -- migration:run",
     "db:revert": "npm run typeorm -- migration:revert",
     "db:drop": "npm run typeorm -- schema:drop",
-    "add-indexes": "ts-node src/scripts/add-indexes.ts"
+    "add-indexes": "ts-node src/scripts/add-indexes.ts",
+    "create-admin": "ts-node src/scripts/create-admin.ts",
+    "create-sample-event": "ts-node src/scripts/create-sample-event.ts",
+    "verify-admin": "ts-node src/scripts/verify-admin.ts",
+    "recreate-admin": "ts-node src/scripts/recreate-admin.ts",
+    "fix-admin-password": "ts-node src/scripts/fix-admin-password.ts",
+    "fix-admin-password-direct": "ts-node src/scripts/fix-admin-password-direct.ts"
   },
   "keywords": [],
   "author": "",

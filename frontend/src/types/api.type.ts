@@ -15,8 +15,11 @@ export type LoginResponseType = {
 };
 
 export type registerType = {
-  name: string;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
   email: string;
+  phoneNumber: string;
   password: string;
 };
 

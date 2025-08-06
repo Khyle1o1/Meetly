@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useBookingState } from "@/hooks/use-booking-state";
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { CheckIcon, ArrowLeft, ArrowRight, CreditCard } from "lucide-react";
 import { scheduleMeetingMutationFn } from "@/lib/api";
 import { toast } from "sonner";
@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/select";
 import PaymentUploadMandatory from "./payment-upload-mandatory";
 import PaymentInstructions from "./payment-instructions";
+import { useBookingStore } from "@/store/booking-store";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const BookingForm = (props: { eventId: string; duration: number }) => {
   const { eventId, duration } = props;
@@ -42,9 +44,34 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
   const { selectedDate, isSuccess, selectedSlot, handleSuccess } =
     useBookingState();
 
+  const { bookingToken, bookingUser } = useBookingStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const { mutate, isPending } = useMutation({
     mutationFn: scheduleMeetingMutationFn,
   });
+
+  // Check if user is authenticated for booking (separate from admin auth)
+  const isUserAuthenticatedForBooking = () => {
+    // For booking, we need a separate authentication context
+    // Admin authentication doesn't count for booking purposes
+    return !!(bookingToken && bookingUser);
+  };
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!isUserAuthenticatedForBooking()) {
+      // Redirect to auth with return URL
+      const returnUrl = location.pathname + location.search;
+      navigate(`/auth?returnUrl=${encodeURIComponent(returnUrl)}`);
+    }
+  }, [navigate, location]);
+
+  // If not authenticated for booking, don't render the form
+  if (!isUserAuthenticatedForBooking()) {
+    return null;
+  }
 
   const bookingFormSchema = z.object({
     lastName: z.string().min(1, "Last name is required"),

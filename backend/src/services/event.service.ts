@@ -51,7 +51,7 @@ export const getUserEventsService = async (userId: string) => {
     .loadRelationCountAndMap("event._count.meetings", "event.meetings")
     .where("user.id = :userId", { userId })
     .orderBy("event.createdAt", "DESC")
-    .cache(true) // Enable caching for this query
+    // .cache(true) // Temporarily disabled caching
     .getOne();
 
   if (!user) {
@@ -108,7 +108,7 @@ export const getPublicEventsByUsernameService = async (username: string) => {
       "event.locationType",
     ])
     .orderBy("event.createdAt", "DESC")
-    .cache(true) // Enable caching for this query
+    // .cache(true) // Temporarily disabled caching
     .getOne();
 
   if (!user) {
@@ -149,7 +149,7 @@ export const getPublicEventByUsernameAndSlugService = async (
       "event.locationType",
     ])
     .addSelect(["user.id", "user.name", "user.imageUrl"])
-    .cache(true) // Enable caching for this query
+    // .cache(true) // Temporarily disabled caching
     .getOne();
 
   return event;
