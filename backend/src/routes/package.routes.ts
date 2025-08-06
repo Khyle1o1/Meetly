@@ -26,10 +26,10 @@ router.delete("/:packageId", passportAuthenticateJwt, requireAdmin, deletePackag
 
 // Admin-only package assignment to events
 router.post("/assign-to-event", passportAuthenticateJwt, requireAdmin, assignPackagesToEventController);
-router.get("/event/:packageId", getEventPackagesController);
+router.get("/event/:eventId", getEventPackagesController);
 
 // Package selection for bookings (public)
 router.post("/meeting/:meetingId/select", selectPackageForBookingController);
-router.get("/meeting/:packageId", getMeetingWithPackageController);
+router.get("/meeting/:meetingId", getMeetingWithPackageController);
 
 export default router; 

@@ -8,6 +8,8 @@ import {
   PackageIdDTO,
   AssignPackagesToEventDto,
   SelectPackageForBookingDto,
+  EventIdDTO,
+  MeetingIdDTO,
 } from "../database/dto/package.dto";
 import {
   createPackageService,
@@ -83,9 +85,10 @@ export const updatePackageController = asyncHandlerAndValidation(
   "body",
   async (req: Request, res: Response, updatePackageDto) => {
     const userId = (req.user as any)?.id as string;
+    const userRole = (req.user as any)?.role as string;
     const packageId = req.params.packageId;
 
-    const package_ = await updatePackageService(userId, packageId, updatePackageDto);
+    const package_ = await updatePackageService(userId, packageId, updatePackageDto, userRole);
 
     res.status(HTTPSTATUS.OK).json({
       message: "Package updated successfully",
@@ -100,8 +103,9 @@ export const deletePackageController = asyncHandlerAndValidation(
   "params",
   async (req: Request, res: Response, packageIdDto) => {
     const userId = (req.user as any)?.id as string;
+    const userRole = (req.user as any)?.role as string;
 
-    await deletePackageService(userId, packageIdDto.packageId);
+    await deletePackageService(userId, packageIdDto.packageId, userRole);
 
     res.status(HTTPSTATUS.OK).json({
       message: "Package deleted successfully",
@@ -127,10 +131,10 @@ export const assignPackagesToEventController = asyncHandlerAndValidation(
 );
 
 export const getEventPackagesController = asyncHandlerAndValidation(
-  PackageIdDTO,
+  EventIdDTO,
   "params",
-  async (req: Request, res: Response, packageIdDto) => {
-    const packages = await getEventPackagesService(packageIdDto.packageId);
+  async (req: Request, res: Response, eventIdDto) => {
+    const packages = await getEventPackagesService(eventIdDto.eventId);
 
     res.status(HTTPSTATUS.OK).json({
       message: "Event packages fetched successfully",
@@ -157,10 +161,10 @@ export const selectPackageForBookingController = asyncHandlerAndValidation(
 );
 
 export const getMeetingWithPackageController = asyncHandlerAndValidation(
-  PackageIdDTO,
+  MeetingIdDTO,
   "params",
-  async (req: Request, res: Response, packageIdDto) => {
-    const meeting = await getMeetingWithPackageService(packageIdDto.packageId);
+  async (req: Request, res: Response, meetingIdDto) => {
+    const meeting = await getMeetingWithPackageService(meetingIdDto.meetingId);
 
     res.status(HTTPSTATUS.OK).json({
       message: "Meeting with package fetched successfully",

@@ -65,11 +65,22 @@ export const getPackageByIdService = async (
 export const updatePackageService = async (
   userId: string,
   packageId: string,
-  updatePackageDto: UpdatePackageDto
+  updatePackageDto: UpdatePackageDto,
+  userRole?: string
 ): Promise<Package> => {
-  const package_ = await packageRepository.findOne({
-    where: { id: packageId, user: { id: userId } },
-  });
+  let package_;
+  
+  if (userRole === 'ADMIN') {
+    // Admins can update any package
+    package_ = await packageRepository.findOne({
+      where: { id: packageId },
+    });
+  } else {
+    // Regular users can only update their own packages
+    package_ = await packageRepository.findOne({
+      where: { id: packageId, user: { id: userId } },
+    });
+  }
 
   if (!package_) {
     throw new Error("Package not found");
@@ -81,11 +92,22 @@ export const updatePackageService = async (
 
 export const deletePackageService = async (
   userId: string,
-  packageId: string
+  packageId: string,
+  userRole?: string
 ): Promise<void> => {
-  const package_ = await packageRepository.findOne({
-    where: { id: packageId, user: { id: userId } },
-  });
+  let package_;
+  
+  if (userRole === 'ADMIN') {
+    // Admins can delete any package
+    package_ = await packageRepository.findOne({
+      where: { id: packageId },
+    });
+  } else {
+    // Regular users can only delete their own packages
+    package_ = await packageRepository.findOne({
+      where: { id: packageId, user: { id: userId } },
+    });
+  }
 
   if (!package_) {
     throw new Error("Package not found");
@@ -108,11 +130,24 @@ export const assignPackagesToEventService = async (
   }
 
   const packages = await packageRepository.find({
-    where: { id: In(assignPackagesDto.packageIds), user: { id: userId } },
+    where: { 
+      id: In(assignPackagesDto.packageIds), 
+      user: { id: userId },
+      isActive: true 
+    },
   });
 
+  // Add debugging information
+  console.log("Requested package IDs:", assignPackagesDto.packageIds);
+  console.log("Found packages:", packages.map(p => ({ id: p.id, name: p.name })));
+  console.log("Expected count:", assignPackagesDto.packageIds.length);
+  console.log("Found count:", packages.length);
+
   if (packages.length !== assignPackagesDto.packageIds.length) {
-    throw new Error("Some packages not found");
+    const foundIds = packages.map(p => p.id);
+    const missingIds = assignPackagesDto.packageIds.filter(id => !foundIds.includes(id));
+    console.log("Missing package IDs:", missingIds);
+    throw new Error(`Some packages not found. Missing IDs: ${missingIds.join(', ')}`);
   }
 
   event.packages = packages;

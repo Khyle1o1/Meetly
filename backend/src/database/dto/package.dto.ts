@@ -106,6 +106,18 @@ export class PackageIdDTO {
   packageId: string;
 }
 
+export class EventIdDTO {
+  @IsUUID(4, { message: "Invalid event uuid" })
+  @IsNotEmpty()
+  eventId: string;
+}
+
+export class MeetingIdDTO {
+  @IsUUID(4, { message: "Invalid meeting uuid" })
+  @IsNotEmpty()
+  meetingId: string;
+}
+
 export class AssignPackagesToEventDto {
   @IsUUID(4, { message: "Invalid event uuid" })
   @IsNotEmpty()

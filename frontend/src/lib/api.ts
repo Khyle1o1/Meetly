@@ -164,17 +164,17 @@ export const getPackagesQueryFn = async (): Promise<PackageResponseType> => {
 };
 
 export const createPackageMutationFn = async (data: any): Promise<SinglePackageResponseType> => {
-  const response = await API.post("/package/create", data);
+  const response = await API.post("/package/", data);
   return response.data;
 };
 
 export const updatePackageMutationFn = async ({ id, data }: { id: string; data: any }): Promise<SinglePackageResponseType> => {
-  const response = await API.put(`/package/update/${id}`, data);
+  const response = await API.put(`/package/${id}`, data);
   return response.data;
 };
 
 export const deletePackageMutationFn = async (id: string): Promise<{ message: string }> => {
-  const response = await API.delete(`/package/delete/${id}`);
+  const response = await API.delete(`/package/${id}`);
   return response.data;
 };
 
@@ -189,7 +189,7 @@ export const getEventPackagesQueryFn = async (eventId: string): Promise<PackageR
 };
 
 export const selectPackageForBookingMutationFn = async ({ meetingId, packageId }: { meetingId: string; packageId: string }): Promise<{ message: string; meeting: any }> => {
-  const response = await API.put(`/package/select-for-booking`, { meetingId, packageId });
+  const response = await API.put(`/package/meeting/${meetingId}/select`, { packageId });
   return response.data;
 };
 

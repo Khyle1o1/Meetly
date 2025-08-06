@@ -6,6 +6,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  ManyToMany,
 } from "typeorm";
 import { User } from "./user.entity";
 import { Event } from "./event.entity";
@@ -46,7 +47,7 @@ export class Package {
   @ManyToOne(() => User, (user) => user.packages)
   user: User;
 
-  @OneToMany(() => Event, (event) => event.packages)
+  @ManyToMany(() => Event, (event) => event.packages)
   events: Event[];
 
   @OneToMany(() => Meeting, (meeting) => meeting.selectedPackage)
