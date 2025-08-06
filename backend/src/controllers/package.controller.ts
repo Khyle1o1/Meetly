@@ -26,26 +26,28 @@ export const createPackageController = asyncHandlerAndValidation(
   CreatePackageDto,
   "body",
   async (req: Request, res: Response, createPackageDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     const package_ = await createPackageService(userId, createPackageDto);
 
-    return res.status(HTTPSTATUS.CREATED).json({
+    res.status(HTTPSTATUS.CREATED).json({
       message: "Package created successfully",
       package: package_,
     });
+    return;
   }
 );
 
 export const getUserPackagesController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
     const packages = await getUserPackagesService(userId);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "User packages fetched successfully",
       packages,
     });
+    return;
   }
 );
 
@@ -53,10 +55,11 @@ export const getAllPackagesController = asyncHandler(
   async (req: Request, res: Response) => {
     const packages = await getAllPackagesService();
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "All packages fetched successfully",
       packages,
     });
+    return;
   }
 );
 
@@ -64,13 +67,14 @@ export const getPackageByIdController = asyncHandlerAndValidation(
   PackageIdDTO,
   "params",
   async (req: Request, res: Response, packageIdDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
     const package_ = await getPackageByIdService(userId, packageIdDto.packageId);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Package fetched successfully",
       package: package_,
     });
+    return;
   }
 );
 
@@ -78,15 +82,16 @@ export const updatePackageController = asyncHandlerAndValidation(
   UpdatePackageDto,
   "body",
   async (req: Request, res: Response, updatePackageDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
     const packageId = req.params.packageId;
 
     const package_ = await updatePackageService(userId, packageId, updatePackageDto);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Package updated successfully",
       package: package_,
     });
+    return;
   }
 );
 
@@ -94,13 +99,14 @@ export const deletePackageController = asyncHandlerAndValidation(
   PackageIdDTO,
   "params",
   async (req: Request, res: Response, packageIdDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     await deletePackageService(userId, packageIdDto.packageId);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Package deleted successfully",
     });
+    return;
   }
 );
 
@@ -108,14 +114,15 @@ export const assignPackagesToEventController = asyncHandlerAndValidation(
   AssignPackagesToEventDto,
   "body",
   async (req: Request, res: Response, assignPackagesDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     const event = await assignPackagesToEventService(userId, assignPackagesDto);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Packages assigned to event successfully",
       event,
     });
+    return;
   }
 );
 
@@ -125,10 +132,11 @@ export const getEventPackagesController = asyncHandlerAndValidation(
   async (req: Request, res: Response, packageIdDto) => {
     const packages = await getEventPackagesService(packageIdDto.packageId);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Event packages fetched successfully",
       packages,
     });
+    return;
   }
 );
 
@@ -140,10 +148,11 @@ export const selectPackageForBookingController = asyncHandlerAndValidation(
 
     const meeting = await selectPackageForBookingService(meetingId, selectPackageDto);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Package selected for booking successfully",
       meeting,
     });
+    return;
   }
 );
 
@@ -153,9 +162,10 @@ export const getMeetingWithPackageController = asyncHandlerAndValidation(
   async (req: Request, res: Response, packageIdDto) => {
     const meeting = await getMeetingWithPackageService(packageIdDto.packageId);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Meeting with package fetched successfully",
       meeting,
     });
+    return;
   }
 ); 

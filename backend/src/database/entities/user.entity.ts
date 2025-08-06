@@ -17,6 +17,12 @@ import { Availability } from "./availability.entity";
 import { Meeting } from "./meeting.entity";
 import { Package } from "./package.entity";
 
+// Role enum for RBAC
+export enum UserRole {
+  USER = "user",
+  ADMIN = "admin",
+}
+
 @Entity({ name: "users" })
 export class User {
   @PrimaryGeneratedColumn("uuid")
@@ -48,6 +54,13 @@ export class User {
 
   @Column({ nullable: true })
   imageUrl: string;
+
+  @Column({ 
+    type: "enum", 
+    enum: UserRole, 
+    default: UserRole.USER 
+  })
+  role: UserRole;
 
   @OneToMany(() => Event, (event) => event.user, {
     cascade: true,
@@ -96,5 +109,10 @@ export class User {
   omitPassword(): Omit<User, "password"> {
     const { password, ...userWithoutPassword } = this;
     return userWithoutPassword as Omit<User, "password">;
+  }
+
+  // Helper method to check if user is admin
+  isAdmin(): boolean {
+    return this.role === UserRole.ADMIN;
   }
 }

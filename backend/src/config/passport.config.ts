@@ -1,14 +1,12 @@
-import {
-  Strategy as JwtStrategy,
-  ExtractJwt,
-  StrategyOptions,
-} from "passport-jwt";
 import passport from "passport";
+import { Strategy as JwtStrategy, StrategyOptions } from "passport-jwt";
+import { ExtractJwt } from "passport-jwt";
 import { config } from "./app.config";
 import { findByIdUserService } from "../services/user.service";
 
 interface JwtPayload {
   userId: string;
+  role?: string;
 }
 
 const options: StrategyOptions = {

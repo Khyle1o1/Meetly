@@ -25,6 +25,7 @@ async function verifyAdminAccount() {
     console.log("📧 Email:", adminUser.email);
     console.log("👤 Username:", adminUser.username);
     console.log("🆔 User ID:", adminUser.id);
+    console.log("🔐 Role:", adminUser.role);
     console.log("🔑 Hashed Password:", adminUser.password.substring(0, 20) + "...");
 
     // Test password comparison

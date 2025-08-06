@@ -15,6 +15,14 @@ export const PROTECTED_ROUTES = {
   MEETINGS: "/app/scheduled_events",
   PACKAGES: "/app/packages",
   ADMIN_PENDING_BOOKINGS: "/app/admin/pending-bookings",
+  // User dashboard routes
+  USER_DASHBOARD: "/app/dashboard",
+  USER_BOOKINGS: "/app/bookings",
+  USER_BOOKING_HISTORY: "/app/bookings/history",
+  // Admin routes
+  ADMIN_DASHBOARD: "/app/admin",
+  ADMIN_USERS: "/app/admin/users",
+  ADMIN_USER_MANAGEMENT: "/app/admin/users/manage",
 };
 
 export const PUBLIC_ROUTES = {

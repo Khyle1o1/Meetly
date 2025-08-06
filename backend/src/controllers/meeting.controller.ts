@@ -22,30 +22,32 @@ import { uploadPaymentProof } from "../services/file-upload.service";
 
 export const getUserMeetingsController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     const filter =
       (req.query.filter as MeetingFilterEnumType) || MeetingFilterEnum.UPCOMING;
 
     const meetings = await getUserMeetingsService(userId, filter);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Meetings fetched successfully",
       meetings,
     });
+    return;
   }
 );
 
 export const getPendingBookingsController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     const pendingBookings = await getPendingBookingsService(userId);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Pending bookings fetched successfully",
       pendingBookings,
     });
+    return;
   }
 );
 

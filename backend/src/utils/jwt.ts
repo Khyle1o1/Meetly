@@ -3,6 +3,7 @@ import { config } from "../config/app.config";
 
 export type AccessTPayload = {
   userId: string;
+  role?: string;
 };
 
 type SignOptsAndSecret = SignOptions & {

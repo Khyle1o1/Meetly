@@ -6,10 +6,12 @@ import { Separator } from "./ui/separator";
 import { useStore } from "@/store/store";
 import { AUTH_ROUTES } from "@/routes/common/routePaths";
 import { SidebarTrigger } from "./ui/sidebar";
+import { useAdmin } from "@/hooks/use-admin";
 
 const Header = () => {
   const navigate = useNavigate();
   const { user, setAccessToken, setUser } = useStore();
+  const { isAdmin } = useAdmin();
 
   const onLogout = () => {
     setUser(null);
@@ -22,10 +24,12 @@ const Header = () => {
     <header className="flex min-h-12 pt-3 pb-4 shrink-0 items-center transition-[width,height] ease-linear">
       <div className="w-full flex items-center justify-between !px-4">
         <div>
-          <SidebarTrigger
-            className={`-ml-5 cursor-pointer lg:hidden
-               bg-white border transform rotate-180`}
-          />
+          {isAdmin && (
+            <SidebarTrigger
+              className={`-ml-5 cursor-pointer lg:hidden
+                 bg-white border transform rotate-180`}
+            />
+          )}
         </div>
         <Popover>
           <PopoverTrigger asChild>

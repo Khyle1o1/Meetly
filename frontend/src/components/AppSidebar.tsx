@@ -7,6 +7,8 @@ import {
   LucideIcon,
   PackageIcon,
   Shield,
+  Users,
+  Home,
 } from "lucide-react";
 import {
   Sidebar,
@@ -19,9 +21,9 @@ import {
   SidebarRail,
   useSidebar,
 } from "./ui/sidebar";
-//import { Separator } from "./ui/separator";
 import { Link, useLocation } from "react-router-dom";
 import { PROTECTED_ROUTES } from "@/routes/common/routePaths";
+import { useAdmin } from "@/hooks/use-admin";
 
 type ItemType = {
   title: string;
@@ -33,10 +35,17 @@ type ItemType = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation();
   const { state } = useSidebar();
+  const { isAdmin } = useAdmin();
 
   const pathname = location.pathname;
 
-  const items: ItemType[] = [
+  // Admin menu items
+  const adminItems: ItemType[] = [
+    {
+      title: "Dashboard",
+      url: PROTECTED_ROUTES.ADMIN_DASHBOARD,
+      icon: Home,
+    },
     {
       title: "Event types",
       url: PROTECTED_ROUTES.EVENT_TYPES,
@@ -58,19 +67,55 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: LayoutGrid,
       separator: true,
     },
-
     {
       title: "Availability",
       url: PROTECTED_ROUTES.AVAILBILITIY,
       icon: ClockIcon,
     },
     {
-      title: "Admin",
-      url: PROTECTED_ROUTES.ADMIN_PENDING_BOOKINGS,
-      icon: Shield,
+      title: "User Management",
+      url: PROTECTED_ROUTES.ADMIN_USERS,
+      icon: Users,
       separator: true,
     },
+    {
+      title: "Pending Bookings",
+      url: PROTECTED_ROUTES.ADMIN_PENDING_BOOKINGS,
+      icon: Shield,
+    },
   ];
+
+  // Regular user menu items
+  const userItems: ItemType[] = [
+    {
+      title: "Dashboard",
+      url: PROTECTED_ROUTES.USER_DASHBOARD,
+      icon: Home,
+    },
+    {
+      title: "Event types",
+      url: PROTECTED_ROUTES.EVENT_TYPES,
+      icon: LinkIcon,
+    },
+    {
+      title: "Meetings",
+      url: PROTECTED_ROUTES.MEETINGS,
+      icon: CalendarRange,
+    },
+    {
+      title: "Integrations & apps",
+      url: PROTECTED_ROUTES.INTEGRATIONS,
+      icon: LayoutGrid,
+      separator: true,
+    },
+    {
+      title: "Availability",
+      url: PROTECTED_ROUTES.AVAILBILITIY,
+      icon: ClockIcon,
+    },
+  ];
+
+  const items = isAdmin ? adminItems : userItems;
 
   return (
     <Sidebar
@@ -107,7 +152,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           />
         </div>
       </SidebarHeader>
-      <SidebarContent className="!p-[4px_8px] dark:bg-background">
+      <SidebarContent>
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
@@ -133,4 +178,4 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarRail />
     </Sidebar>
   );
-}
+} 

@@ -7,7 +7,12 @@ const AuthRoute = () => {
 
   if (!accessToken && !user) return <Outlet />;
 
-  return <Navigate to={PROTECTED_ROUTES.EVENT_TYPES} replace />;
+  // Redirect based on user role
+  if (user?.role === "admin") {
+    return <Navigate to={PROTECTED_ROUTES.ADMIN_DASHBOARD} replace />;
+  } else {
+    return <Navigate to={PROTECTED_ROUTES.USER_DASHBOARD} replace />;
+  }
 };
 
 export default AuthRoute;

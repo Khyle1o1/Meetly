@@ -32,10 +32,12 @@ export function withValidation<T extends object>(
         const errors = await validate(dtoInstance);
 
         if (errors.length > 0) {
-          return formatValidationError(res, errors);
+          formatValidationError(res, errors);
+          return;
         }
 
-        return handler(req, res, dtoInstance);
+        await handler(req, res, dtoInstance);
+        return;
       } catch (error) {
         next(error);
       }

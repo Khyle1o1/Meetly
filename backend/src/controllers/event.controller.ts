@@ -21,7 +21,7 @@ export const createEventController = asyncHandlerAndValidation(
   CreateEventDto,
   "body",
   async (req: Request, res: Response, createEventDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     const event = await createEventService(userId, createEventDto);
 
@@ -34,7 +34,7 @@ export const createEventController = asyncHandlerAndValidation(
 
 export const getUserEventsController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
     const { events, username } = await getUserEventsService(userId);
 
     return res.status(HTTPSTATUS.OK).json({
@@ -51,7 +51,7 @@ export const toggleEventPrivacyController = asyncHandlerAndValidation(
   EventIdDTO,
   "body",
   async (req: Request, res: Response, eventIdDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     const event = await toggleEventPrivacyService(userId, eventIdDto.eventId);
 
@@ -100,7 +100,7 @@ export const deleteEventController = asyncHandlerAndValidation(
   EventIdDTO,
   "params",
   async (req: Request, res: Response, eventIdDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     await deleteEventService(userId, eventIdDto.eventId);
     return res.status(HTTPSTATUS.OK).json({

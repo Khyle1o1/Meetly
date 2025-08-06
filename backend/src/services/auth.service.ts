@@ -76,7 +76,10 @@ export const loginService = async (loginDto: LoginDto) => {
     throw new UnauthorizedException("Invalid email/password");
   }
 
-  const { token, expiresAt } = signJwtToken({ userId: user.id });
+  const { token, expiresAt } = signJwtToken({ 
+    userId: user.id,
+    role: user.role 
+  });
 
   return {
     user: user.omitPassword(),
@@ -98,7 +101,8 @@ async function generateUsername(name: string): Promise<string> {
   });
 
   while (existingUser) {
-    username = `${baseUsername}${uuidv4().replace(/\s+/g, "").slice(0, 4)}`;
+    const newUuidSuffix = uuidv4().replace(/\s+/g, "").slice(0, 4);
+    username = `${baseUsername}${newUuidSuffix}`;
     existingUser = await userRepository.findOne({
       where: { username },
     });

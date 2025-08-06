@@ -13,6 +13,7 @@ export type LoginResponseType = {
     lastName: string;
     middleName?: string;
     phoneNumber?: string;
+    role: string;
   };
   accessToken: string;
   expiresAt: number;

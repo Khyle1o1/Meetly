@@ -22,14 +22,15 @@ const CLIENT_APP_URL = config.FRONTEND_INTEGRATION_URL;
 
 export const getUserIntegrationsController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     const integrations = await getUserIntegrationsService(userId);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Fetched user integrations successfully",
       integrations,
     });
+    return;
   }
 );
 
@@ -37,17 +38,15 @@ export const checkIntegrationController = asyncHandlerAndValidation(
   AppTypeDTO,
   "params",
   async (req: Request, res: Response, appTypeDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
-    const isConnected = await checkIntegrationService(
-      userId,
-      appTypeDto.appType
-    );
+    const integration = await checkIntegrationService(userId, appTypeDto.appType);
 
-    return res.status(HTTPSTATUS.OK).json({
-      message: "Integration checked successfully",
-      isConnected,
+    res.status(HTTPSTATUS.OK).json({
+      message: "Integration status checked successfully",
+      integration,
     });
+    return;
   }
 );
 
@@ -55,13 +54,15 @@ export const connectAppController = asyncHandlerAndValidation(
   AppTypeDTO,
   "params",
   async (req: Request, res: Response, appTypeDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
-    const { url } = await connectAppService(userId, appTypeDto.appType);
+    const integration = await connectAppService(userId, appTypeDto.appType);
 
-    return res.status(HTTPSTATUS.OK).json({
-      url,
+    res.status(HTTPSTATUS.OK).json({
+      message: "App connected successfully",
+      integration,
     });
+    return;
   }
 );
 

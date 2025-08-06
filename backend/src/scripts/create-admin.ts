@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { AppDataSource } from "../config/database.config";
-import { User } from "../database/entities/user.entity";
+import { User, UserRole } from "../database/entities/user.entity";
 import { Availability } from "../database/entities/availability.entity";
 import { DayAvailability, DayOfWeekEnum } from "../database/entities/day-availability";
 import { hashValue } from "../utils/bcrypt";
@@ -25,6 +25,7 @@ async function createAdminAccount() {
       console.log("Email: admin@meetly.com");
       console.log("Password: admin123");
       console.log("Username:", existingAdmin.username);
+      console.log("Role:", existingAdmin.role);
       return;
     }
 
@@ -36,6 +37,7 @@ async function createAdminAccount() {
       username: "admin",
       email: "admin@meetly.com",
       password: hashedPassword,
+      role: UserRole.ADMIN,
     });
 
     // Create default availability for admin
@@ -59,7 +61,7 @@ async function createAdminAccount() {
     console.log("📧 Email: admin@meetly.com");
     console.log("🔑 Password: admin123");
     console.log("👤 Username: admin");
-    console.log("🆔 User ID:", adminUser.id);
+    console.log("🔐 Role: ADMIN");
 
   } catch (error) {
     console.error("❌ Error creating admin account:", error);

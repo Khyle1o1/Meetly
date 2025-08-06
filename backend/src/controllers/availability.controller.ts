@@ -12,14 +12,15 @@ import { EventIdDTO } from "../database/dto/event.dto";
 
 export const getUserAvailabilityController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
     const availability = await getUserAvailabilityService(userId);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Fetched availability successfully",
       availability,
     });
+    return;
   }
 );
 
@@ -27,13 +28,15 @@ export const updateAvailabilityController = asyncHandlerAndValidation(
   UpdateAvailabilityDto,
   "body",
   async (req: Request, res: Response, updateAvailabilityDto) => {
-    const userId = req.user?.id as string;
+    const userId = (req.user as any)?.id as string;
 
-    await updateAvailabilityService(userId, updateAvailabilityDto);
+    const availability = await updateAvailabilityService(userId, updateAvailabilityDto);
 
-    return res.status(HTTPSTATUS.OK).json({
+    res.status(HTTPSTATUS.OK).json({
       message: "Availability updated successfully",
+      availability,
     });
+    return;
   }
 );
 

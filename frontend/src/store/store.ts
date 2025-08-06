@@ -8,6 +8,7 @@ type UserType = {
   name: string;
   username: string;
   email: string;
+  role: string;
 };
 
 type AuthState = {

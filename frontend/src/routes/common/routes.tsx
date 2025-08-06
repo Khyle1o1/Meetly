@@ -7,6 +7,9 @@ import Availability from "@/pages/availability";
 import Integrations from "@/pages/integrations";
 import Packages from "@/pages/packages";
 import PendingBookings from "@/pages/admin/pending-bookings";
+import AdminDashboard from "@/pages/admin/dashboard";
+import UserManagement from "@/pages/admin/user-management";
+import UserDashboard from "@/pages/user/dashboard";
 import UserEventsPage from "@/pages/external_page/user-events";
 import UserSingleEventPage from "@/pages/external_page/user-single-event";
 import BookingAuthPage from "@/pages/external_page/booking-auth-page";
@@ -23,6 +26,11 @@ export const protectedRoutePaths = [
   { path: PROTECTED_ROUTES.INTEGRATIONS, element: <Integrations /> },
   { path: PROTECTED_ROUTES.PACKAGES, element: <Packages /> },
   { path: PROTECTED_ROUTES.ADMIN_PENDING_BOOKINGS, element: <PendingBookings /> },
+  // User dashboard routes
+  { path: PROTECTED_ROUTES.USER_DASHBOARD, element: <UserDashboard /> },
+  // Admin routes
+  { path: PROTECTED_ROUTES.ADMIN_DASHBOARD, element: <AdminDashboard /> },
+  { path: PROTECTED_ROUTES.ADMIN_USERS, element: <UserManagement /> },
 ];
 
 export const publicRoutePaths = [
