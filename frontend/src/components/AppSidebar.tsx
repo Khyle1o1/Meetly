@@ -57,7 +57,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: PackageIcon,
     },
     {
-      title: "Meetings",
+      title: "Bookings",
       url: PROTECTED_ROUTES.MEETINGS,
       icon: CalendarRange,
     },
@@ -78,11 +78,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Users,
       separator: true,
     },
-    {
-      title: "Pending Bookings",
-      url: PROTECTED_ROUTES.ADMIN_PENDING_BOOKINGS,
-      icon: Shield,
-    },
   ];
 
   // Regular user menu items
@@ -98,7 +93,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: LinkIcon,
     },
     {
-      title: "Meetings",
+      title: "Bookings",
       url: PROTECTED_ROUTES.MEETINGS,
       icon: CalendarRange,
     },

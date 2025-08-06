@@ -120,6 +120,7 @@ export interface MeetingType {
   createdAt: string;
   updatedAt: string;
   event: EventType;
+  selectedPackage?: Package;
 }
 export interface UserMeetingsResponseType {
   message: string;
@@ -189,7 +190,7 @@ export interface CreateMeetingType {
   additionalInfo?: string;
 }
 
-export type PeriodType = "UPCOMING" | "PAST" | "CANCELLED";
+export type PeriodType = "UPCOMING" | "PAST" | "CANCELLED" | "PENDING_BOOKINGS";
 
 //*********** PACKAGE TYPES */
 export interface PackageResponseType {

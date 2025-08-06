@@ -3,11 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import TabHeader from "./_components/tab-header";
 import { Separator } from "@/components/ui/separator";
 import TabPanel from "./_components/tab-panel";
+import PendingBookingsPanel from "./_components/pending-bookings-panel";
 import useMeetingFilter from "@/hooks/use-meeting-filter";
 import PageTitle from "@/components/PageTitle";
 import { getUserMeetingsQueryFn } from "@/lib/api";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { Loader } from "@/components/loader";
+import { PeriodEnum } from "@/hooks/use-meeting-filter";
 
 const Meetings = () => {
   const { period } = useMeetingFilter();
@@ -15,13 +17,14 @@ const Meetings = () => {
   const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey: ["userMeetings", period],
     queryFn: () => getUserMeetingsQueryFn(period),
+    enabled: period !== PeriodEnum.PENDING_BOOKINGS, // Don't fetch meetings data for pending bookings tab
   });
 
   const meetings = data?.meetings || [];
 
   return (
     <div className="flex flex-col !gap-3">
-      <PageTitle title="Meetings" />
+      <PageTitle title="Bookings" />
 
       <ErrorAlert isError={isError} error={error} />
 
@@ -39,11 +42,15 @@ const Meetings = () => {
             <CardContent className="p-0 pb-3">
               <TabHeader />
               <Separator className="border-[#D4E16F]" />
-              <TabPanel
-                isFetching={isFetching}
-                meetings={meetings}
-                period={period}
-              />
+              {period === PeriodEnum.PENDING_BOOKINGS ? (
+                <PendingBookingsPanel />
+              ) : (
+                <TabPanel
+                  isFetching={isFetching}
+                  meetings={meetings}
+                  period={period}
+                />
+              )}
             </CardContent>
           </Card>
         </div>

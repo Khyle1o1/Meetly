@@ -1,5 +1,5 @@
 import { Fragment, useRef, useState } from "react";
-import { ChevronDown, Trash2Icon } from "lucide-react";
+import { ChevronDown, Trash2Icon, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MeetingType, PeriodType } from "@/types/api.type";
 import { format, parseISO } from "date-fns";
@@ -7,6 +7,8 @@ import { locationOptions } from "@/lib/types";
 import { PeriodEnum } from "@/hooks/use-meeting-filter";
 import { Loader } from "@/components/loader";
 import { cn } from "@/lib/utils";
+import ImageZoomModal from "@/components/ui/image-zoom-modal";
+import { getBackendBaseUrl } from "@/lib/get-env";
 
 const MeetingCard = (props: {
   meeting: MeetingType;
@@ -17,6 +19,15 @@ const MeetingCard = (props: {
   const { meeting, isPending, period, onCancel } = props;
 
   const [isShow, setIsShow] = useState(false);
+  const [paymentProofModal, setPaymentProofModal] = useState<{
+    isOpen: boolean;
+    imageUrl: string;
+    fileName: string;
+  }>({
+    isOpen: false,
+    imageUrl: "",
+    fileName: "",
+  });
   const detailsRef = useRef<HTMLDivElement>(null);
 
   // Format the date and time
@@ -35,6 +46,10 @@ const MeetingCard = (props: {
   const toggleDetails = () => {
     setIsShow(!isShow);
   };
+
+  // Check if this is a booking with additional details (has firstName, lastName, etc.)
+  const isDetailedBooking = (meeting as any).firstName && (meeting as any).lastName;
+
   return (
     <div className="w-full">
       <h2
@@ -44,7 +59,6 @@ const MeetingCard = (props: {
         {formattedDate}
       </h2>
 
-      {/* {Event body} */}
       {/* {Event body} */}
       <div role="buton" className="event-list-body" onClick={toggleDetails}>
         <div
@@ -89,8 +103,6 @@ const MeetingCard = (props: {
       </div>
 
       {/* {Event Details} */}
-      {/* {Event Details} */}
-      {/* {Event Details} */}
       <div
         ref={detailsRef}
         className="event-details overflow-hidden transition-all duration-300 ease-in-out"
@@ -129,6 +141,91 @@ const MeetingCard = (props: {
                 </h5>
                 <p className="font-normal text-[15px]">{meeting.guestEmail}</p>
               </li>
+
+              {/* Show additional booking details if available */}
+              {isDetailedBooking && (
+                <>
+                  <li className="mb-4">
+                    <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
+                      Contact Number
+                    </h5>
+                    <p className="font-normal text-[15px]">{(meeting as any).contactNumber || 'Not provided'}</p>
+                  </li>
+                  <li className="mb-4">
+                    <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
+                      School
+                    </h5>
+                    <p className="font-normal text-[15px]">{(meeting as any).schoolName || 'Not provided'}</p>
+                  </li>
+                  <li className="mb-4">
+                    <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
+                      Year Level
+                    </h5>
+                    <p className="font-normal text-[15px]">{(meeting as any).yearLevel || 'Not provided'}</p>
+                  </li>
+                  {(meeting as any).selectedPackage && (
+                    <li className="mb-4">
+                      <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
+                        Selected Package
+                      </h5>
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          {(meeting as any).selectedPackage.name} - ₱{(meeting as any).selectedPackage.price}
+                        </p>
+                      </div>
+                    </li>
+                  )}
+                  {(meeting as any).paymentProofUrl && (
+                    <li className="mb-4">
+                      <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
+                        Payment Proof
+                      </h5>
+                      <div className="mt-2">
+                        <div className="relative group cursor-pointer" onClick={() => {
+                          setPaymentProofModal({
+                            isOpen: true,
+                            imageUrl: `${getBackendBaseUrl()}${(meeting as any).paymentProofUrl}`,
+                            fileName: (meeting as any).paymentProofUrl.split('/').pop() || 'Payment Proof'
+                          });
+                        }}>
+                          <img 
+                            src={`${getBackendBaseUrl()}${(meeting as any).paymentProofUrl}`}
+                            alt="Payment Proof" 
+                            className="max-w-xs rounded-lg border hover:opacity-80 transition-opacity"
+                            onError={(e) => {
+                              console.error("Failed to load payment proof image:", e);
+                              e.currentTarget.style.display = 'none';
+                              // Show a fallback message
+                              const fallbackDiv = document.createElement('div');
+                              fallbackDiv.className = 'text-sm text-gray-500 p-2 border rounded';
+                              fallbackDiv.textContent = 'Payment proof image could not be loaded';
+                              e.currentTarget.parentNode?.appendChild(fallbackDiv);
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                            <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  )}
+                </>
+              )}
+
+              {/* Show package information for all bookings */}
+              {meeting.selectedPackage && (
+                <li className="mb-4">
+                  <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
+                    Selected Package
+                  </h5>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      {meeting.selectedPackage.name} - ₱{meeting.selectedPackage.price}
+                    </p>
+                  </div>
+                </li>
+              )}
+
               <li className="mb-4">
                 <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
                   Location
@@ -170,6 +267,14 @@ const MeetingCard = (props: {
           </div>
         </div>
       </div>
+
+      {/* Payment Proof Zoom Modal */}
+      <ImageZoomModal
+        isOpen={paymentProofModal.isOpen}
+        imageUrl={paymentProofModal.imageUrl}
+        fileName={paymentProofModal.fileName}
+        onClose={() => setPaymentProofModal({ isOpen: false, imageUrl: "", fileName: "" })}
+      />
     </div>
   );
 };

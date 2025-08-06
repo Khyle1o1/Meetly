@@ -8,7 +8,7 @@ import { ErrorAlert } from "@/components/ErrorAlert";
 import PageTitle from "@/components/PageTitle";
 import ImageZoomModal from "@/components/ui/image-zoom-modal";
 import { toast } from "sonner";
-import { CheckIcon, XIcon, EyeIcon, ZoomIn } from "lucide-react";
+import { CheckIcon, XIcon, EyeIcon, ZoomIn, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { 
   getPendingBookingsQueryFn, 
@@ -19,6 +19,7 @@ import { ENV, getBackendBaseUrl } from "@/lib/get-env";
 const PendingBookings = () => {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [adminMessage, setAdminMessage] = useState("");
+  const [expandedBookings, setExpandedBookings] = useState<Set<string>>(new Set());
   const [paymentProofModal, setPaymentProofModal] = useState<{
     isOpen: boolean;
     imageUrl: string;
@@ -78,6 +79,18 @@ const PendingBookings = () => {
     });
   };
 
+  const toggleExpanded = (bookingId: string) => {
+    setExpandedBookings(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(bookingId)) {
+        newSet.delete(bookingId);
+      } else {
+        newSet.add(bookingId);
+      }
+      return newSet;
+    });
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
@@ -109,120 +122,148 @@ const PendingBookings = () => {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {pendingBookings.map((booking: any) => (
-            <Card key={booking.id} className="overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">
-                      {booking.firstName} {booking.lastName}
-                    </CardTitle>
-                    <p className="text-sm text-gray-600">{booking.guestEmail}</p>
-                  </div>
-                  {getStatusBadge(booking.status)}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-semibold">Contact:</span> {booking.contactNumber}
-                  </div>
-                  <div>
-                    <span className="font-semibold">School:</span> {booking.schoolName}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Year Level:</span> {booking.yearLevel}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Event:</span> {booking.event?.title}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Date:</span> {format(new Date(booking.startTime), 'PPP')}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Time:</span> {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
-                  </div>
-                </div>
-                
-                {booking.selectedPackage && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <strong>Selected Package:</strong> {booking.selectedPackage.name} - ₱{booking.selectedPackage.price}
-                    </p>
-                  </div>
-                )}
-
-                {booking.additionalInfo && (
-                  <div>
-                    <span className="font-semibold text-sm">Additional Notes:</span>
-                    <p className="text-sm text-gray-600 mt-1">{booking.additionalInfo}</p>
-                  </div>
-                )}
-
-                {booking.paymentProofUrl && (
-                  <div>
-                    <span className="font-semibold text-sm">Payment Proof:</span>
-                    <div className="mt-2">
-                      <div className="relative group cursor-pointer" onClick={() => {
-                        setPaymentProofModal({
-                          isOpen: true,
-                          imageUrl: `${getBackendBaseUrl()}${booking.paymentProofUrl}`,
-                          fileName: booking.paymentProofUrl.split('/').pop() || 'Payment Proof'
-                        });
-                      }}>
-                        <img 
-                          src={`${getBackendBaseUrl()}${booking.paymentProofUrl}`}
-                          alt="Payment Proof" 
-                          className="max-w-xs rounded-lg border hover:opacity-80 transition-opacity"
-                          onError={(e) => {
-                            console.error("Failed to load payment proof image:", e);
-                            e.currentTarget.style.display = 'none';
-                            // Show a fallback message
-                            const fallbackDiv = document.createElement('div');
-                            fallbackDiv.className = 'text-sm text-gray-500 p-2 border rounded';
-                            fallbackDiv.textContent = 'Payment proof image could not be loaded';
-                            e.currentTarget.parentNode?.appendChild(fallbackDiv);
-                          }}
-                          onLoad={() => {
-                            console.log("Payment proof image loaded successfully");
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                          <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      </div>
+          {pendingBookings.map((booking: any) => {
+            const isExpanded = expandedBookings.has(booking.id);
+            
+            return (
+              <Card key={booking.id} className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">
+                        {booking.firstName} {booking.lastName}
+                      </CardTitle>
+                      <p className="text-sm text-gray-600">{booking.guestEmail}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(booking.status)}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleExpanded(booking.id)}
+                        className="p-1 h-auto"
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </Button>
                     </div>
                   </div>
-                )}
+                </CardHeader>
+                
+                {/* Basic info always visible */}
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-semibold">Date:</span> {format(new Date(booking.startTime), 'PPP')}
+                    </div>
+                    <div>
+                      <span className="font-semibold">Time:</span> {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
+                    </div>
+                  </div>
+                  
+                  {booking.selectedPackage && (
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        <strong>Selected Package:</strong> {booking.selectedPackage.name} - ₱{booking.selectedPackage.price}
+                      </p>
+                    </div>
+                  )}
 
-                <div className="flex gap-2 pt-4 border-t">
-                  <Button
-                    onClick={() => handleApprove(booking)}
-                    disabled={updateStatusMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <CheckIcon className="w-4 h-4 mr-2" />
-                    Approve
-                  </Button>
-                  <Button
-                    onClick={() => handleDecline(booking)}
-                    disabled={updateStatusMutation.isPending}
-                    variant="destructive"
-                  >
-                    <XIcon className="w-4 h-4 mr-2" />
-                    Decline
-                  </Button>
-                  <Button
-                    onClick={() => setSelectedBooking(booking)}
-                    variant="outline"
-                  >
-                    <EyeIcon className="w-4 h-4 mr-2" />
-                    View Details
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  {/* Expandable content */}
+                  {isExpanded && (
+                    <div className="space-y-4 pt-4 border-t">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-semibold">Contact:</span> {booking.contactNumber}
+                        </div>
+                        <div>
+                          <span className="font-semibold">School:</span> {booking.schoolName}
+                        </div>
+                        <div>
+                          <span className="font-semibold">Year Level:</span> {booking.yearLevel}
+                        </div>
+                        <div>
+                          <span className="font-semibold">Event:</span> {booking.event?.title}
+                        </div>
+                      </div>
+
+                      {booking.additionalInfo && (
+                        <div>
+                          <span className="font-semibold text-sm">Additional Notes:</span>
+                          <p className="text-sm text-gray-600 mt-1">{booking.additionalInfo}</p>
+                        </div>
+                      )}
+
+                      {booking.paymentProofUrl && (
+                        <div>
+                          <span className="font-semibold text-sm">Payment Proof:</span>
+                          <div className="mt-2">
+                            <div className="relative group cursor-pointer" onClick={() => {
+                              setPaymentProofModal({
+                                isOpen: true,
+                                imageUrl: `${getBackendBaseUrl()}${booking.paymentProofUrl}`,
+                                fileName: booking.paymentProofUrl.split('/').pop() || 'Payment Proof'
+                              });
+                            }}>
+                              <img 
+                                src={`${getBackendBaseUrl()}${booking.paymentProofUrl}`}
+                                alt="Payment Proof" 
+                                className="max-w-xs rounded-lg border hover:opacity-80 transition-opacity"
+                                onError={(e) => {
+                                  console.error("Failed to load payment proof image:", e);
+                                  e.currentTarget.style.display = 'none';
+                                  // Show a fallback message
+                                  const fallbackDiv = document.createElement('div');
+                                  fallbackDiv.className = 'text-sm text-gray-500 p-2 border rounded';
+                                  fallbackDiv.textContent = 'Payment proof image could not be loaded';
+                                  e.currentTarget.parentNode?.appendChild(fallbackDiv);
+                                }}
+                                onLoad={() => {
+                                  console.log("Payment proof image loaded successfully");
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 pt-4 border-t">
+                        <Button
+                          onClick={() => handleApprove(booking)}
+                          disabled={updateStatusMutation.isPending}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckIcon className="w-4 h-4 mr-2" />
+                          Approve
+                        </Button>
+                        <Button
+                          onClick={() => handleDecline(booking)}
+                          disabled={updateStatusMutation.isPending}
+                          variant="destructive"
+                        >
+                          <XIcon className="w-4 h-4 mr-2" />
+                          Decline
+                        </Button>
+                        <Button
+                          onClick={() => setSelectedBooking(booking)}
+                          variant="outline"
+                        >
+                          <EyeIcon className="w-4 h-4 mr-2" />
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

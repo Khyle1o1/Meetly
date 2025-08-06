@@ -4,6 +4,7 @@ export enum PeriodEnum {
   UPCOMING = "UPCOMING",
   PAST = "PAST",
   CANCELLED = "CANCELLED",
+  PENDING_BOOKINGS = "PENDING_BOOKINGS",
 }
 
 const useMeetingFilter = () => {

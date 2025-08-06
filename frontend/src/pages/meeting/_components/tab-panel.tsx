@@ -52,7 +52,9 @@ const TabPanel: FC<PropsType> = ({ period, meetings, isFetching }) => {
               ? "Upcoming"
               : period === PeriodEnum.PAST
               ? "Past"
-              : "Cancelled"
+              : period === PeriodEnum.CANCELLED
+              ? "Cancelled"
+              : "Pending"
           } Meeting`}
         />
       ) : (
