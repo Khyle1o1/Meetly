@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useBookingState } from "@/hooks/use-booking-state";
 import { Fragment, useState } from "react";
-import { CheckIcon, ExternalLink } from "lucide-react";
+import { CheckIcon, ArrowLeft, ArrowRight, CreditCard } from "lucide-react";
 import { scheduleMeetingMutationFn } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader } from "@/components/loader";
@@ -29,13 +29,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import PaymentUpload from "./payment-upload";
+import PaymentUploadMandatory from "./payment-upload-mandatory";
+import PaymentInstructions from "./payment-instructions";
 
 const BookingForm = (props: { eventId: string; duration: number }) => {
   const { eventId, duration } = props;
-  const [meetLink, setMeetLink] = useState("");
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [paymentError, setPaymentError] = useState("");
 
   const { selectedDate, isSuccess, selectedSlot, handleSuccess } =
     useBookingState();
@@ -74,6 +76,14 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
   const onSubmit = async (values: BookingFormData) => {
     if (!eventId || !selectedSlot || !selectedDate) return;
     
+    // Validate payment proof is uploaded
+    if (!selectedFile) {
+      setPaymentError("Payment proof is required to complete your booking");
+      return;
+    }
+    
+    setPaymentError("");
+    
     // Decode the selected slot to get the slotDate
     const decodedSlotDate = decodeURIComponent(selectedSlot);
 
@@ -98,7 +108,7 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
     formData.append("yearLevel", values.yearLevel);
     if (values.additionalInfo) formData.append("additionalInfo", values.additionalInfo);
     if (selectedPackage?.id) formData.append("selectedPackageId", selectedPackage.id);
-    if (selectedFile) formData.append("paymentProof", selectedFile);
+    formData.append("paymentProof", selectedFile);
 
     console.log("Form Data:", Object.fromEntries(formData));
 
@@ -107,7 +117,6 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
     mutate(formData as any, {
       onSuccess: (response) => {
         console.log(response);
-        setMeetLink(response.data.meetLink);
         handleSuccess(true);
       },
       onError: (error) => {
@@ -115,6 +124,31 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
         toast.error(error.message || "Failed to schedule event");
       },
     });
+  };
+
+  const handleNextStep = () => {
+    // Validate current step before proceeding
+    if (currentStep === 1) {
+      const isValid = form.trigger([
+        "lastName",
+        "firstName", 
+        "contactNumber",
+        "guestEmail",
+        "schoolName",
+        "yearLevel"
+      ]);
+      
+      isValid.then((valid) => {
+        if (valid) {
+          setCurrentStep(2);
+        }
+      });
+    }
+  };
+
+  const handleBackStep = () => {
+    setCurrentStep(1);
+    setPaymentError("");
   };
 
   const yearLevelOptions = [
@@ -155,9 +189,41 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
         </div>
       ) : (
         <Fragment>
-          <h2 className="text-xl font-bold mb-6">Enter Details</h2>
+          {/* Progress Indicator */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                  currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  1
+                </div>
+                <span className={`font-medium ${currentStep >= 1 ? 'text-blue-600' : 'text-gray-500'}`}>
+                  Personal Details
+                </span>
+              </div>
+              <div className="flex-1 h-0.5 bg-gray-200 mx-4"></div>
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                  currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  2
+                </div>
+                <span className={`font-medium ${currentStep >= 2 ? 'text-blue-600' : 'text-gray-500'}`}>
+                  Payment
+                </span>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 text-center">
+              Step {currentStep} of 2
+            </p>
+          </div>
+
+          <h2 className="text-xl font-bold mb-6">
+            {currentStep === 1 ? "Enter Your Details" : "Complete Payment"}
+          </h2>
           
-          {/* Package Selection */}
+          {/* Package Selection - Show on both steps */}
           <PackageSelection
             eventId={eventId}
             onPackageSelect={setSelectedPackage}
@@ -166,178 +232,221 @@ const BookingForm = (props: { eventId: string; duration: number }) => {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Last Name Field */}
-              <FormField
-                name="lastName"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label className="font-semibold !text-base text-[#0a2540]">
-                      Last Name *
-                    </Label>
-                    <FormControl className="mt-1">
-                      <Input placeholder="Enter your last name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {currentStep === 1 ? (
+                // Step 1: Personal Details
+                <div className="space-y-4">
+                  {/* Last Name Field */}
+                  <FormField
+                    name="lastName"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="font-semibold !text-base text-[#0a2540]">
+                          Last Name *
+                        </Label>
+                        <FormControl className="mt-1">
+                          <Input placeholder="Enter your last name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* First Name Field */}
-              <FormField
-                name="firstName"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label className="font-semibold !text-base text-[#0a2540]">
-                      First Name *
-                    </Label>
-                    <FormControl className="mt-1">
-                      <Input placeholder="Enter your first name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* First Name Field */}
+                  <FormField
+                    name="firstName"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="font-semibold !text-base text-[#0a2540]">
+                          First Name *
+                        </Label>
+                        <FormControl className="mt-1">
+                          <Input placeholder="Enter your first name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Middle Name Field */}
-              <FormField
-                name="middleName"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label className="font-semibold !text-base text-[#0a2540]">
-                      Middle Name
-                    </Label>
-                    <FormControl className="mt-1">
-                      <Input placeholder="Enter your middle name (optional)" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Middle Name Field */}
+                  <FormField
+                    name="middleName"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="font-semibold !text-base text-[#0a2540]">
+                          Middle Name
+                        </Label>
+                        <FormControl className="mt-1">
+                          <Input placeholder="Enter your middle name (optional)" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Contact Number Field */}
-              <FormField
-                name="contactNumber"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label className="font-semibold !text-base text-[#0a2540]">
-                      Contact Number *
-                    </Label>
-                    <FormControl className="mt-1">
-                      <Input placeholder="Enter your contact number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Contact Number Field */}
+                  <FormField
+                    name="contactNumber"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="font-semibold !text-base text-[#0a2540]">
+                          Contact Number *
+                        </Label>
+                        <FormControl className="mt-1">
+                          <Input placeholder="Enter your contact number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Email Field */}
-              <FormField
-                name="guestEmail"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label className="font-semibold !text-base text-[#0a2540]">
-                      Email Address *
-                    </Label>
-                    <FormControl className="mt-1">
-                      <Input placeholder="Enter your email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Email Field */}
+                  <FormField
+                    name="guestEmail"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="font-semibold !text-base text-[#0a2540]">
+                          Email Address *
+                        </Label>
+                        <FormControl className="mt-1">
+                          <Input placeholder="Enter your email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* School Name Field */}
-              <FormField
-                name="schoolName"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label className="font-semibold !text-base text-[#0a2540]">
-                      Name of School *
-                    </Label>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your school" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {schoolOptions.map((school) => (
-                          <SelectItem key={school} value={school}>
-                            {school}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* School Name Field */}
+                  <FormField
+                    name="schoolName"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="font-semibold !text-base text-[#0a2540]">
+                          Name of School *
+                        </Label>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your school" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {schoolOptions.map((school) => (
+                              <SelectItem key={school} value={school}>
+                                {school}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Year Level Field */}
-              <FormField
-                name="yearLevel"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label className="font-semibold !text-base text-[#0a2540]">
-                      Year Level *
-                    </Label>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your year level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {yearLevelOptions.map((level) => (
-                          <SelectItem key={level} value={level}>
-                            {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Year Level Field */}
+                  <FormField
+                    name="yearLevel"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="font-semibold !text-base text-[#0a2540]">
+                          Year Level *
+                        </Label>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your year level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {yearLevelOptions.map((level) => (
+                              <SelectItem key={level} value={level}>
+                                {level}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Payment Upload */}
-              <PaymentUpload
-                onFileSelect={setSelectedFile}
-                selectedFile={selectedFile}
-              />
+                  {/* Next Button */}
+                  <Button 
+                    type="button" 
+                    onClick={handleNextStep}
+                    className="w-full"
+                  >
+                    Next <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              ) : (
+                // Step 2: Payment
+                <div className="space-y-6">
+                  {/* Payment Instructions */}
+                  <PaymentInstructions selectedPackage={selectedPackage} />
 
-              {/* Additional Info Field */}
-              <FormField
-                name="additionalInfo"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label className="font-semibold !text-base text-[#0a2540] ">
-                      Additional notes
-                    </Label>
-                    <FormControl className="mt-1">
-                      <Textarea
-                        placeholder="Please share anything that will help prepare for our meeting."
-                        className="min-h-32"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Payment Upload */}
+                  <PaymentUploadMandatory
+                    onFileSelect={setSelectedFile}
+                    selectedFile={selectedFile}
+                    error={paymentError}
+                  />
 
-              {/* Submit Button */}
-              <Button disabled={isPending} type="submit">
-                {isPending ? <Loader color="white" /> : "Submit Booking"}
-              </Button>
+                  {/* Additional Info Field */}
+                  <FormField
+                    name="additionalInfo"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="font-semibold !text-base text-[#0a2540] ">
+                          Additional notes
+                        </Label>
+                        <FormControl className="mt-1">
+                          <Textarea
+                            placeholder="Please share anything that will help prepare for our meeting."
+                            className="min-h-32"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Navigation Buttons */}
+                  <div className="flex gap-3">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={handleBackStep}
+                      className="flex-1"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Back
+                    </Button>
+                    <Button 
+                      disabled={isPending} 
+                      type="submit"
+                      className="flex-1"
+                    >
+                      {isPending ? (
+                        <Loader color="white" />
+                      ) : (
+                        <>
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          Submit Booking
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </form>
           </Form>
         </Fragment>
