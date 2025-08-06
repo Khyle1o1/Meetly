@@ -3,7 +3,17 @@ import { useStore } from "@/store/store";
 import { CustomError } from "@/types/custom-error.type";
 import { ENV } from "./get-env";
 
-const baseURL = ENV.VITE_API_BASE_URL;
+// Debug logging
+console.log("API Base URL from ENV:", ENV.VITE_API_BASE_URL);
+console.log("Environment variables:", {
+  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  VITE_APP_ORIGIN: import.meta.env.VITE_APP_ORIGIN,
+});
+
+// Use environment variable if available, otherwise use proxy
+const baseURL = ENV.VITE_API_BASE_URL || "/api";
+
+console.log("Final Base URL:", baseURL);
 
 const options = {
   baseURL,

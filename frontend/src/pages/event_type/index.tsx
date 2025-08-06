@@ -13,8 +13,9 @@ const EventType = () => {
     queryFn: geteventListQueryFn,
   });
 
-  const events = data?.data.events || [];
-  const username = data?.data.username ?? "";
+  // Add better null checking to prevent the error
+  const events = data?.data?.events || [];
+  const username = data?.data?.username ?? "";
 
   return (
     <div className="flex flex-col !gap-8">

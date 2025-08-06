@@ -6,6 +6,7 @@ import {
   LinkIcon,
   LucideIcon,
   PackageIcon,
+  Shield,
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,6 +63,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Availability",
       url: PROTECTED_ROUTES.AVAILBILITIY,
       icon: ClockIcon,
+    },
+    {
+      title: "Admin",
+      url: PROTECTED_ROUTES.ADMIN_PENDING_BOOKINGS,
+      icon: Shield,
+      separator: true,
     },
   ];
 

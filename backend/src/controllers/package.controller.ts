@@ -19,6 +19,7 @@ import {
   getEventPackagesService,
   selectPackageForBookingService,
   getMeetingWithPackageService,
+  getAllPackagesService,
 } from "../services/package.service";
 
 export const createPackageController = asyncHandlerAndValidation(
@@ -46,6 +47,17 @@ export const getUserPackagesController = asyncHandler(
 
     return res.status(HTTPSTATUS.OK).json({
       message: "User packages fetched successfully",
+      packages,
+    });
+  }
+);
+
+export const getAllPackagesController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const packages = await getAllPackagesService();
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "All packages fetched successfully",
       packages,
     });
   }

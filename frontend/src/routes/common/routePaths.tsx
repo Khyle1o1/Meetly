@@ -13,6 +13,7 @@ export const PROTECTED_ROUTES = {
   AVAILBILITIY: "/app/availability/schedules",
   MEETINGS: "/app/scheduled_events",
   PACKAGES: "/app/packages",
+  ADMIN_PENDING_BOOKINGS: "/app/admin/pending-bookings",
 };
 
 export const PUBLIC_ROUTES = {

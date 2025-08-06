@@ -96,12 +96,34 @@ export const getUserMeetingsQueryFn = async (
   return response.data;
 };
 
+export const getPendingBookingsQueryFn = async () => {
+  const response = await API.get("/meeting/user/pending");
+  return response.data;
+};
+
+export const updateMeetingStatusMutationFn = async ({
+  meetingId,
+  status,
+  adminMessage,
+}: {
+  meetingId: string;
+  status: "APPROVED" | "DECLINED";
+  adminMessage?: string;
+}) => {
+  const response = await API.put(`/meeting/status/${meetingId}`, {
+    status,
+    adminMessage,
+  });
+  return response.data;
+};
+
 export const cancelMeetingMutationFn = async (meetingId: string) => {
   const response = await API.put(`/meeting/cancel/${meetingId}`, {});
   return response.data;
 };
 
-//*********** */ All EXTERNAL/PUBLIC APIS
+//*********** */ Public Event APIS
+
 export const getAllPublicEventQueryFn = async (
   username: string
 ): Promise<PublicEventResponseType> => {
@@ -123,35 +145,36 @@ export const getPublicAvailabilityByEventIdQueryFn = async (
   eventId: string,
   timezone?: string
 ): Promise<PublicAvailabilityEventResponseType> => {
-  const response = await PublicAPI.get(`/availability/public/${eventId}`);
+  const response = await PublicAPI.get(
+    `/availability/public/${eventId}${timezone ? `?timezone=${timezone}` : ""}`
+  );
   return response.data;
 };
 
-//Create Meeting Eventid
 export const scheduleMeetingMutationFn = async (data: CreateMeetingType) => {
-  const response = await API.post("/meeting/public/create", data);
+  const response = await PublicAPI.post("/meeting/public/create", data);
   return response.data;
 };
 
-//*********** */ PACKAGE APIS
+//*********** */ Package APIS
+
 export const getPackagesQueryFn = async (): Promise<PackageResponseType> => {
-  const response = await API.get("/package");
+  const response = await API.get("/package/all");
   return response.data;
 };
 
 export const createPackageMutationFn = async (data: any): Promise<SinglePackageResponseType> => {
-  console.log("Creating package with data:", data);
-  const response = await API.post("/package", data);
+  const response = await API.post("/package/create", data);
   return response.data;
 };
 
 export const updatePackageMutationFn = async ({ id, data }: { id: string; data: any }): Promise<SinglePackageResponseType> => {
-  const response = await API.put(`/package/${id}`, data);
+  const response = await API.put(`/package/update/${id}`, data);
   return response.data;
 };
 
 export const deletePackageMutationFn = async (id: string): Promise<{ message: string }> => {
-  const response = await API.delete(`/package/${id}`);
+  const response = await API.delete(`/package/delete/${id}`);
   return response.data;
 };
 
@@ -166,6 +189,28 @@ export const getEventPackagesQueryFn = async (eventId: string): Promise<PackageR
 };
 
 export const selectPackageForBookingMutationFn = async ({ meetingId, packageId }: { meetingId: string; packageId: string }): Promise<{ message: string; meeting: any }> => {
-  const response = await API.post(`/package/meeting/${meetingId}/select`, { packageId });
+  const response = await API.put(`/package/select-for-booking`, { meetingId, packageId });
+  return response.data;
+};
+
+//*********** */ School APIS
+
+export const getAllSchoolsQueryFn = async () => {
+  const response = await API.get("/school/all");
+  return response.data;
+};
+
+export const createSchoolMutationFn = async (data: { name: string; isActive?: boolean }) => {
+  const response = await API.post("/school/create", data);
+  return response.data;
+};
+
+export const updateSchoolMutationFn = async ({ id, data }: { id: string; data: { name?: string; isActive?: boolean } }) => {
+  const response = await API.put(`/school/update/${id}`, data);
+  return response.data;
+};
+
+export const deleteSchoolMutationFn = async (id: string) => {
+  const response = await API.delete(`/school/delete/${id}`);
   return response.data;
 };

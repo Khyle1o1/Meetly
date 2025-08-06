@@ -12,6 +12,9 @@ import { IntegrationAppTypeEnum } from "./integration.entity";
 import { Package } from "./package.entity";
 
 export enum MeetingStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  DECLINED = "DECLINED",
   SCHEDULED = "SCHEDULED",
   CANCELLED = "CANCELLED",
 }
@@ -36,6 +39,31 @@ export class Meeting {
   @Column({ nullable: true })
   additionalInfo: string;
 
+  // New fields for enhanced booking flow
+  @Column({ nullable: true })
+  lastName: string;
+
+  @Column({ nullable: true })
+  firstName: string;
+
+  @Column({ nullable: true })
+  middleName: string;
+
+  @Column({ nullable: true })
+  contactNumber: string;
+
+  @Column({ nullable: true })
+  schoolName: string;
+
+  @Column({ nullable: true })
+  yearLevel: string;
+
+  @Column({ nullable: true })
+  paymentProofUrl: string;
+
+  @Column({ nullable: true })
+  adminMessage: string;
+
   @Column()
   startTime: Date;
 
@@ -54,7 +82,7 @@ export class Meeting {
   @Column({
     type: "enum",
     enum: MeetingStatus,
-    default: MeetingStatus.SCHEDULED,
+    default: MeetingStatus.PENDING,
   })
   status: MeetingStatus;
 

@@ -40,6 +40,13 @@ export const getUserPackagesService = async (userId: string): Promise<Package[]>
   });
 };
 
+export const getAllPackagesService = async (): Promise<Package[]> => {
+  return await packageRepository.find({
+    where: { isActive: true },
+    order: { createdAt: "DESC" },
+  });
+};
+
 export const getPackageByIdService = async (
   userId: string,
   packageId: string

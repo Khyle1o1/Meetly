@@ -3,6 +3,7 @@ import { passportAuthenticateJwt } from "../config/passport.config";
 import {
   createPackageController,
   getUserPackagesController,
+  getAllPackagesController,
   getPackageByIdController,
   updatePackageController,
   deletePackageController,
@@ -17,6 +18,7 @@ const router = Router();
 // Package CRUD operations
 router.post("/", passportAuthenticateJwt, createPackageController);
 router.get("/", passportAuthenticateJwt, getUserPackagesController);
+router.get("/all", getAllPackagesController);
 router.get("/:packageId", passportAuthenticateJwt, getPackageByIdController);
 router.put("/:packageId", passportAuthenticateJwt, updatePackageController);
 router.delete("/:packageId", passportAuthenticateJwt, deletePackageController);

@@ -6,6 +6,7 @@ import Meetings from "@/pages/meeting";
 import Availability from "@/pages/availability";
 import Integrations from "@/pages/integrations";
 import Packages from "@/pages/packages";
+import PendingBookings from "@/pages/admin/pending-bookings";
 import UserEventsPage from "@/pages/external_page/user-events";
 import UserSingleEventPage from "@/pages/external_page/user-single-event";
 
@@ -20,6 +21,7 @@ export const protectedRoutePaths = [
   { path: PROTECTED_ROUTES.AVAILBILITIY, element: <Availability /> },
   { path: PROTECTED_ROUTES.INTEGRATIONS, element: <Integrations /> },
   { path: PROTECTED_ROUTES.PACKAGES, element: <Packages /> },
+  { path: PROTECTED_ROUTES.ADMIN_PENDING_BOOKINGS, element: <PendingBookings /> },
 ];
 
 export const publicRoutePaths = [
