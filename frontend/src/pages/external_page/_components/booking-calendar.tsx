@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { Calendar } from "@/components/calendar";
-import { CalendarDate, DateValue } from "@internationalized/date";
+import { CalendarDate, DateValue, today } from "@internationalized/date";
 import { useBookingState } from "@/hooks/use-booking-state";
 import { decodeSlot, formatSlot } from "@/lib/helper";
 import { getPublicAvailabilityByEventIdQueryFn, checkExistingBookingQueryFn } from "@/lib/api";
@@ -30,7 +30,6 @@ const BookingCalendar = ({
   showDateRange,
 }: BookingCalendarProps) => {
   const {
-    timezone,
     hourType,
     selectedDate,
     selectedSlot,
@@ -96,24 +95,35 @@ const BookingCalendar = ({
     ? availability?.find(
         (day) =>
           day.day ===
-          format(selectedDate.toDate(timezone), "EEEE").toUpperCase()
+          format(selectedDate.toDate("Asia/Manila"), "EEEE").toUpperCase()
       )?.slots || []
     : [];
 
   const isDateUnavailable = (date: DateValue) => {
-    const dateObj = date.toDate(timezone);
-    
+    const manilaTz = "Asia/Manila";
+    const dateObj = date.toDate(manilaTz);
+
+    // Disable past dates based on Philippines date
+    const manilaToday = today(manilaTz).toDate(manilaTz);
+    // Compare by date only
+    const manilaTodayMidnight = new Date(manilaToday.getFullYear(), manilaToday.getMonth(), manilaToday.getDate());
+    const dateMidnight = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    if (dateMidnight < manilaTodayMidnight) {
+      return true;
+    }
+
     // Check if date is within the configured date range (if showDateRange is true)
     if (showDateRange && startDate && endDate) {
-      const startDateObj = new Date(startDate);
-      const endDateObj = new Date(endDate);
-      
-      // If date is outside the configured range, mark it as unavailable
-      if (dateObj < startDateObj || dateObj > endDateObj) {
+      const startManila = new Date(new Date(startDate).toLocaleString("en-US", { timeZone: manilaTz }));
+      const endManila = new Date(new Date(endDate).toLocaleString("en-US", { timeZone: manilaTz }));
+      const startMidnight = new Date(startManila.getFullYear(), startManila.getMonth(), startManila.getDate());
+      const endMidnight = new Date(endManila.getFullYear(), endManila.getMonth(), endManila.getDate());
+
+      if (dateMidnight < startMidnight || dateMidnight > endMidnight) {
         return true;
       }
     }
-    
+
     // Get the day of the week (e.g., "MONDAY")
     const dayOfWeek = format(dateObj, "EEEE").toUpperCase();
     // Check if the day is available
@@ -122,45 +132,36 @@ const BookingCalendar = ({
   };
 
   const handleChangeDate = (newDate: DateValue) => {
-    const calendarDate = newDate as CalendarDate;
     handleSelectSlot(null);
-    handleSelectDate(calendarDate); // Update useBookingState hook
+    handleSelectDate(newDate as CalendarDate); // Update useBookingState hook
   };
 
   // Check if user is authenticated for booking (separate from admin auth)
   const isUserAuthenticatedForBooking = () => {
-    // For booking, we need a separate authentication context
-    // Admin authentication doesn't count for booking purposes
     return !!(bookingToken && bookingUser);
   };
 
   const handleSelectSlotWithAuth = (slot: string) => {
-    // Always require booking authentication, regardless of admin login
     if (!isUserAuthenticatedForBooking()) {
-      // Redirect to booking auth with return URL
       const returnUrl = location.pathname + location.search;
       navigate(`/auth?returnUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
-    
-    // If authenticated for booking, proceed with slot selection
+
     handleSelectSlot(slot);
   };
 
   const handleNextWithAuth = () => {
-    // Always require booking authentication, regardless of admin login
     if (!isUserAuthenticatedForBooking()) {
-      // Redirect to booking auth with return URL
       const returnUrl = location.pathname + location.search;
       navigate(`/auth?returnUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
-    
-    // If authenticated for booking, proceed with next step
+
     handleNext();
   };
 
-  const selectedTime = decodeSlot(selectedSlot, timezone, hourType);
+  const selectedTime = decodeSlot(selectedSlot, "Asia/Manila", hourType);
 
   return (
     <div className="relative lg:flex-[1_1_50%] w-full flex-shrink-0 transition-all duration-220 ease-out p-4 pr-0">
@@ -193,7 +194,7 @@ const BookingCalendar = ({
               minValue={minValue}
               defaultValue={defaultValue}
               value={selectedDate}
-              timezone={timezone}
+              timezone={"Asia/Manila"}
               onChange={handleChangeDate}
               isDateUnavailable={isDateUnavailable}
             />
@@ -202,7 +203,7 @@ const BookingCalendar = ({
             <div className="w-full flex-shrink-0 mt-3 lg:mt-0 max-w-xs md:max-w-[40%] pt-0 overflow-hidden md:ml-[-15px]">
               <div className="w-full pb-3  flex flex-col md:flex-row justify-between pr-8">
                 <h3 className=" mt-0 mb-[10px] font-normal text-base leading-[38px]">
-                  {format(selectedDate.toDate(timezone), "EEEE d")}
+                  {format(selectedDate.toDate("Asia/Manila"), "EEEE d")}
                 </h3>
 
                 <div className="flex h-9 w-full max-w-[107px] items-center border rounded-sm">
@@ -224,14 +225,13 @@ const BookingCalendar = ({
              scrollbar-track-transparent scroll--bar h-[400px]"
               >
                 {timeSlots.map((slot, i) => {
-                  const formattedSlot = formatSlot(slot, timezone, hourType);
+                  const formattedSlot = formatSlot(slot, "Asia/Manila", hourType);
                   return (
                     <div role="list" key={i}>
                       <div
                         role="listitem"
                         className="m-[10px_10px_10px_0] relative text-[15px]"
                       >
-                        {/* Selected Time and Next Button */}
                         {/* Selected Time and Next Button */}
                         <div
                           className={`absolute inset-0 z-20 flex items-center gap-1.5 justify-between
@@ -257,8 +257,6 @@ const BookingCalendar = ({
                           </button>
                         </div>
 
-                        {/* Time Slot Button */}
-                        {/* Time Slot Button */}
                         {/* Time Slot Button */}
                         <button
                           type="button"

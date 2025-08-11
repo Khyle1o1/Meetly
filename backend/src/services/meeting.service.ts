@@ -58,13 +58,9 @@ export const getPendingBookingsService = async (userId: string) => {
   const meetingRepository = AppDataSource.getRepository(Meeting);
 
   const meetings = await meetingRepository.find({
-    where: { 
-      user: { id: userId },
-      status: MeetingStatus.PENDING 
-    },
-    relations: ["event", "selectedPackage"],
+    where: { user: { id: userId }, status: MeetingStatus.PENDING },
+    relations: ["event", "event.user", "selectedPackage"],
     order: { createdAt: "DESC" },
-    // cache: true, // Temporarily disabled caching
   });
 
   return meetings || [];
@@ -157,10 +153,65 @@ export const createMeetBookingForGuestService = async (
   const event = await eventRepository.findOne({
     where: { id: eventId, isPrivate: false },
     relations: ["user", "packages"],
-    select: ["id", "title", "locationType", "user"], // Only select needed fields
+    select: [
+      "id",
+      "title",
+      "locationType",
+      "user",
+      "startDate",
+      "endDate",
+      "showDateRange",
+      "duration",
+    ],
   });
 
   if (!event) throw new NotFoundException("Event not found");
+
+  // Asia/Manila current date and time for validation
+  const nowManila = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const startInManila = new Date(startTime.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+
+  const manilaTodayMidnight = new Date(
+    nowManila.getFullYear(),
+    nowManila.getMonth(),
+    nowManila.getDate()
+  );
+  const startDateMidnightManila = new Date(
+    startInManila.getFullYear(),
+    startInManila.getMonth(),
+    startInManila.getDate()
+  );
+
+  // Disallow booking a date earlier than the current Philippines date
+  if (startDateMidnightManila < manilaTodayMidnight) {
+    throw new BadRequestException("Selected date is in the past (Asia/Manila).");
+  }
+
+  // Optionally guard against booking times already passed today in Manila
+  if (startDateMidnightManila.getTime() === manilaTodayMidnight.getTime() && startInManila < nowManila) {
+    throw new BadRequestException("Selected time has already passed (Asia/Manila).");
+  }
+
+  // Validate against event-configured date range if applicable
+  if (event.showDateRange && event.startDate && event.endDate) {
+    const eventStartManila = new Date(new Date(event.startDate).toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+    const eventEndManila = new Date(new Date(event.endDate).toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+
+    const eventStartMidnight = new Date(
+      eventStartManila.getFullYear(),
+      eventStartManila.getMonth(),
+      eventStartManila.getDate()
+    );
+    const eventEndMidnight = new Date(
+      eventEndManila.getFullYear(),
+      eventEndManila.getMonth(),
+      eventEndManila.getDate()
+    );
+
+    if (startDateMidnightManila < eventStartMidnight || startDateMidnightManila > eventEndMidnight) {
+      throw new BadRequestException("Selected date is outside the allowed event date range.");
+    }
+  }
 
   // Handle package selection if provided
   let selectedPackage: Package | null = null;

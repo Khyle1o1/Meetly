@@ -21,7 +21,7 @@ export const useBookingState = () => {
   );
 
   const [timezone, setTimezone] = useQueryState("timezone", {
-    defaultValue: getLocalTimeZone(), // Default to user's system timezone
+    defaultValue: "Asia/Manila",
   });
 
   const [hourType, setHourType] = useQueryState<"12h" | "24h">("hourType", {

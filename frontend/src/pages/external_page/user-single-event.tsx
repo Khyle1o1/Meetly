@@ -17,7 +17,7 @@ const UserSingleEventPage = () => {
   const username = param.username as string;
   const slug = param.slug as string;
 
-  const { next, timezone, selectedDate } = useBookingState();
+  const { next, selectedDate } = useBookingState();
 
   const { data, isFetching, isLoading, isError, error } = useQuery({
     queryKey: ["public_single_event"],
@@ -30,29 +30,31 @@ const UserSingleEventPage = () => {
 
   const event = data?.event;
 
-  // Calculate the minimum date for the calendar
+  // Calculate the minimum date for the calendar (Asia/Manila)
   const getMinValue = () => {
+    const manilaTz = "Asia/Manila";
+    const manilaToday = today(manilaTz);
+
     if (event?.showDateRange && event?.startDate) {
-      // Use the event's start date as minimum
       const startDate = new Date(event.startDate);
-      return parseDate(startDate.toISOString().split('T')[0]);
+      const start = parseDate(startDate.toISOString().split("T")[0]);
+      // min is the later of startDate and Manila today
+      return start.compare(manilaToday) > 0 ? start : manilaToday;
     }
-    // Default to today
-    return today(timezone);
+    return manilaToday;
   };
 
-  // Calculate the default value for the calendar
+  // Calculate the default value for the calendar (Asia/Manila)
   const getDefaultValue = () => {
+    const manilaTz = "Asia/Manila";
+    const manilaToday = today(manilaTz);
+
     if (event?.showDateRange && event?.startDate) {
       const startDate = new Date(event.startDate);
-      const todayDate = new Date();
-      
-      // If start date is in the future, use start date; otherwise use today
-      if (startDate > todayDate) {
-        return parseDate(startDate.toISOString().split('T')[0]);
-      }
+      const start = parseDate(startDate.toISOString().split("T")[0]);
+      return start.compare(manilaToday) > 0 ? start : manilaToday;
     }
-    return today(timezone);
+    return manilaToday;
   };
 
   return (

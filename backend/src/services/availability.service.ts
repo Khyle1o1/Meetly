@@ -4,7 +4,7 @@ import { User } from "../database/entities/user.entity";
 import { NotFoundException } from "../utils/app-error";
 import { UpdateAvailabilityDto } from "../database/dto/availability.dto";
 import { Availability } from "../database/entities/availability.entity";
-import { DayOfWeekEnum } from "../database/entities/day-availability";
+import { DayAvailability, DayOfWeekEnum } from "../database/entities/day-availability";
 import { Event } from "../database/entities/event.entity";
 import { addDays, addMinutes, format, parseISO } from "date-fns";
 
@@ -58,7 +58,7 @@ export const updateAvailabilityService = async (
         startTime: new Date(`${baseDate}T${startTime}:00Z`),
         endTime: new Date(`${baseDate}T${endTime}:00Z`),
         isAvailable,
-      };
+      } as Partial<DayAvailability>;
     }
   );
 
@@ -68,9 +68,16 @@ export const updateAvailabilityService = async (
       timeGap: data.timeGap,
       days: dayAvailabilityData.map((day) => ({
         ...day,
-        availability: { id: user.availability.id },
-      })),
+        availability: { id: user.availability.id } as Availability,
+      })) as DayAvailability[],
     });
+  } else {
+    const availability = availabilityRepository.create({
+      user: { id: userId } as User,
+      timeGap: data.timeGap,
+      days: dayAvailabilityData as DayAvailability[],
+    });
+    await availabilityRepository.save(availability);
   }
 
   return { sucess: true };
@@ -95,18 +102,30 @@ export const getAvailabilityForPublicEventService = async (eventId: string) => {
 
   const daysOfWeek = Object.values(DayOfWeekEnum);
 
-  const availableDays = [];
+  const availableDays = [] as Array<{ day: string; slots: string[]; isAvailable: boolean }>;
+
+  const manilaNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const manilaTodayMidnight = new Date(manilaNow.getFullYear(), manilaNow.getMonth(), manilaNow.getDate());
 
   for (const dayOfWeek of daysOfWeek) {
     const nextDate = getNextDateForDay(dayOfWeek);
 
+    // Skip past dates relative to Manila
+    const nextDateManila = new Date(nextDate.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+    const nextDateMidnight = new Date(nextDateManila.getFullYear(), nextDateManila.getMonth(), nextDateManila.getDate());
+    if (nextDateMidnight < manilaTodayMidnight) {
+      continue;
+    }
+
     // Check if the date is within the event's date range (if showDateRange is true)
     if (event.showDateRange && event.startDate && event.endDate) {
-      const startDate = new Date(event.startDate);
-      const endDate = new Date(event.endDate);
-      
-      // If the next occurrence of this day is outside the configured range, skip it
-      if (nextDate < startDate || nextDate > endDate) {
+      const startDate = new Date(new Date(event.startDate).toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+      const endDate = new Date(new Date(event.endDate).toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+
+      const startDateMidnight = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const endDateMidnight = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+      if (nextDateMidnight < startDateMidnight || nextDateMidnight > endDateMidnight) {
         continue;
       }
     }
@@ -146,20 +165,15 @@ function getNextDateForDay(dayOfWeek: string): Date {
     "SATURDAY",
   ];
 
-  const today = new Date();
-  const todayDay = today.getDay();
+  // Use Asia/Manila to determine "today"
+  const todayManila = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const todayDay = todayManila.getDay();
 
   const targetDay = days.indexOf(dayOfWeek);
 
-  //todayDay = 1// Monday
-  //dayOfWeek  = 1 Monday
-  //(1 - 1) = 0
-  //-3 + 7 = 4
-  // 4 % 7 = 4
-  //result: Monday is in 0
   const daysUntilTarget = (targetDay - todayDay + 7) % 7;
 
-  return addDays(today, daysUntilTarget);
+  return addDays(todayManila, daysUntilTarget);
 }
 
 function generateAvailableTimeSlots(
@@ -170,7 +184,7 @@ function generateAvailableTimeSlots(
   dateStr: string,
   timeGap: number = 30
 ) {
-  const slots = [];
+  const slots: string[] = [];
 
   let slotStartTime = parseISO(
     `${dateStr}T${startTime.toISOString().slice(11, 16)}`
@@ -180,12 +194,12 @@ function generateAvailableTimeSlots(
     `${dateStr}T${endTime.toISOString().slice(11, 16)}`
   );
 
-  const now = new Date();
-
-  const isToday = format(now, "yyyy-MM-dd") === dateStr;
+  // Manila "now" for same-day filtering
+  const nowManila = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const isToday = format(nowManila, "yyyy-MM-dd") === dateStr;
 
   while (slotStartTime < slotEndTime) {
-    if (!isToday || slotStartTime >= now) {
+    if (!isToday || slotStartTime >= nowManila) {
       const slotEnd = new Date(slotStartTime.getTime() + duration * 60000);
 
       if (isSlotAvailable(slotStartTime, slotEnd, meetings)) {
