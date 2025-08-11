@@ -2,6 +2,7 @@ import React from "react";
 import { Loader } from "@/components/loader";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import BookingHeader from "./booking-header";
 
 const PageContainer = (props: {
   isLoading?: boolean;
@@ -11,6 +12,7 @@ const PageContainer = (props: {
   const { children, className, isLoading } = props;
   return (
     <div className="w-full">
+      <BookingHeader />
       <div className="flex items-center justify-center mt-[66px] mb-[30px]">
         {isLoading ? (
           <div className="flex items-center justify-center min-h-[10vh]">
