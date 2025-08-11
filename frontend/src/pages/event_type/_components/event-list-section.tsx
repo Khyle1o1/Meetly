@@ -1,7 +1,7 @@
 import { EventType } from "@/types/api.type";
 import EventCard from "./event-card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toggleEventVisibilityMutationFn } from "@/lib/api";
+import { toggleEventVisibilityMutationFn, deleteEventMutationFn } from "@/lib/api";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -12,6 +12,10 @@ const EventListSection = (props: { events: EventType[]; username: string }) => {
   const queryClient = useQueryClient();
   const { mutate, isPending } = useMutation({
     mutationFn: toggleEventVisibilityMutationFn,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteEventMutationFn,
   });
 
   const toggleEventVisibility = (eventId: string) => {
@@ -34,6 +38,19 @@ const EventListSection = (props: { events: EventType[]; username: string }) => {
       }
     );
   };
+
+  const handleDelete = (eventId: string) => {
+    deleteMutation.mutate(eventId, {
+      onSuccess: (response) => {
+        toast.success(response.message || "Event deleted");
+        queryClient.invalidateQueries({ queryKey: ["event_list"] });
+      },
+      onError: (error: any) => {
+        toast.error(error?.message || "Failed to delete event");
+      },
+    });
+  };
+
   return (
     <div className="w-full">
       <div
@@ -53,6 +70,7 @@ const EventListSection = (props: { events: EventType[]; username: string }) => {
             username={username}
             isPending={pendingEventId === event.id ? isPending : false}
             onToggle={() => toggleEventVisibility(event.id)}
+            onDelete={() => handleDelete(event.id)}
           />
         ))}
       </div>

@@ -14,7 +14,7 @@ import {
   getPendingBookingsQueryFn, 
   updateMeetingStatusMutationFn 
 } from "@/lib/api";
-import { ENV, getBackendBaseUrl } from "@/lib/get-env";
+import { getBackendBaseUrl } from "@/lib/get-env";
 
 const PendingBookings = () => {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);

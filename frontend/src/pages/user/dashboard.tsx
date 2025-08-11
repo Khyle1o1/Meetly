@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { PROTECTED_ROUTES } from "@/routes/common/routePaths";
 import { Calendar, Clock, CheckCircle, XCircle, Package, ArrowRight, Play, X } from "lucide-react";
 import { Loader } from "@/components/loader";
 import { ErrorAlert } from "@/components/ErrorAlert";

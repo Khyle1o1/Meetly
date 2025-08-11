@@ -1,12 +1,10 @@
 import {
   CalendarRange,
-  ClockIcon,
   Command,
   LayoutGrid,
   LinkIcon,
   LucideIcon,
   PackageIcon,
-  Shield,
   Users,
   Home,
 } from "lucide-react";
@@ -68,11 +66,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       separator: true,
     },
     {
-      title: "Availability",
-      url: PROTECTED_ROUTES.AVAILBILITIY,
-      icon: ClockIcon,
-    },
-    {
       title: "User Management",
       url: PROTECTED_ROUTES.ADMIN_USERS,
       icon: Users,
@@ -102,11 +95,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: PROTECTED_ROUTES.INTEGRATIONS,
       icon: LayoutGrid,
       separator: true,
-    },
-    {
-      title: "Availability",
-      url: PROTECTED_ROUTES.AVAILBILITIY,
-      icon: ClockIcon,
     },
   ];
 

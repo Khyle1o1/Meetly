@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ENV } from "@/lib/get-env";
 import { cn } from "@/lib/utils";
-import { CopyIcon, PackageIcon } from "lucide-react";
+import { CopyIcon, PackageIcon, Trash2 } from "lucide-react";
 import { FC, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -15,10 +15,11 @@ interface PropsType {
   title: string;
   slug: string;
   duration: number;
-  isPrivate: boolean;
   username: string;
+  isPrivate?: boolean;
   isPending: boolean;
   onToggle: () => void;
+  onDelete?: () => void;
 }
 
 const EventCard: FC<PropsType> = ({
@@ -30,6 +31,7 @@ const EventCard: FC<PropsType> = ({
   username,
   isPending,
   onToggle,
+  onDelete,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
@@ -46,6 +48,12 @@ const EventCard: FC<PropsType> = ({
       .catch((error) => {
         console.error("Failed to copy link:", error);
       });
+  };
+
+  const handleDelete = () => {
+    if (!onDelete) return;
+    const ok = window.confirm(`Delete event \"${title}\"? This cannot be undone.`);
+    if (ok) onDelete();
   };
 
   return (
@@ -100,16 +108,15 @@ const EventCard: FC<PropsType> = ({
           </div>
         </CardContent>
         <CardFooter
-          className="p-[12px_8px_12px_16px] 
-        border-t border-[#D4E162] h-full flex items-center justify-between"
+          className="p-[12px_8px_12px_16px] border-t border-[#D4E162] h-full flex flex-wrap items-center justify-between bg-white gap-2"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="ghost"
               disabled={isPrivate}
               className="flex items-center gap-2 cursor-pointer font-light text-sm text-[rgb(0,105,255)]
               disabled:text-[rgba(26,26,26,0.61)] disabled:bg-[#e7edf6] disabled:opacity-100
-                        "
+                        min-w-[90px] px-2"
               onClick={handleCopyLink}
             >
               <CopyIcon className="w-4 h-4" />
@@ -121,7 +128,7 @@ const EventCard: FC<PropsType> = ({
               disabled={isPrivate}
               className="flex items-center gap-2 cursor-pointer font-light text-sm text-[rgb(0,105,255)]
               disabled:text-[rgba(26,26,26,0.61)] disabled:bg-[#e7edf6] disabled:opacity-100
-                        "
+                        min-w-[90px] px-2"
               onClick={() => setIsPackageModalOpen(true)}
             >
               <PackageIcon className="w-4 h-4" />
@@ -129,21 +136,33 @@ const EventCard: FC<PropsType> = ({
             </Button>
           </div>
 
-          <Button
-            variant="outline"
-            className={cn(
-              "!p-[8px_16px] text-sm font-normal !h-[37px] cursor-pointer disabled:pointer-events-none",
-              isPrivate && "!border-[#445d76] !text-[#0a2540] z-30 "
-            )}
-            disabled={isPending}
-            onClick={onToggle}
-          >
-            {isPending ? (
-              <Loader size="sm" color="black" />
-            ) : (
-              <span>Turn {isPrivate ? "On" : "Off"}</span>
-            )}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              className="!p-[8px_12px] text-sm font-normal !h-[37px] border-red-300 text-red-600 hover:bg-red-50 min-w-[90px] px-2"
+              onClick={handleDelete}
+              title="Delete this event"
+            >
+              <Trash2 className="w-4 h-4 mr-1 text-red-600" />
+              Delete
+            </Button>
+
+            <Button
+              variant="outline"
+              className={cn(
+                "!p-[8px_16px] text-sm font-normal !h-[37px] cursor-pointer disabled:pointer-events-none min-w-[90px] px-2",
+                isPrivate && "!border-[#445d76] !text-[#0a2540] z-30 "
+              )}
+              disabled={isPending}
+              onClick={onToggle}
+            >
+              {isPending ? (
+                <Loader size="sm" color="black" />
+              ) : (
+                <span>Turn {isPrivate ? "On" : "Off"}</span>
+              )}
+            </Button>
+          </div>
         </CardFooter>
       </Card>
 

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getEventPackagesQueryFn } from "@/lib/api";
 import { Package } from "@/types/package.type";
-import { Check, Star, Camera, Sparkles } from "lucide-react";
+import { Check, Star } from "lucide-react";
 
 interface PackageSelectionProps {
   eventId: string;

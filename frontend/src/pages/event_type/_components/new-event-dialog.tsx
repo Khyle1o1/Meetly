@@ -22,22 +22,24 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusIcon } from "lucide-react";
 import { locationOptions, VideoConferencingPlatform } from "@/lib/types";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { CreateEventMutationFn, getPackagesQueryFn, assignPackagesToEventMutationFn } from "@/lib/api";
+import { CreateEventMutationFn, getPackagesQueryFn, assignPackagesToEventMutationFn, getUserAvailabilityQueryFn, updateUserAvailabilityMutationFn } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader } from "@/components/loader";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Package } from "@/types/package.type";
+import DayAvailability from "@/pages/availability/_components/day-availability";
+import { dayMapping } from "@/lib/availability";
+import type { DayAvailabilityType } from "@/types/api.type";
 
 const NewEventDialog = (props: { btnVariant?: string }) => {
   const { btnVariant } = props;
 
   const queryClient = useQueryClient();
-  const { mutate, isPending } = useMutation({
+  const { mutateAsync: createEvent, isPending: isCreatingEvent } = useMutation({
     mutationFn: CreateEventMutationFn,
   });
 
@@ -45,10 +47,13 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
     mutationFn: assignPackagesToEventMutationFn,
   });
 
+  const updateAvailabilityMutation = useMutation({
+    mutationFn: updateUserAvailabilityMutationFn,
+  });
+
   const [selectedLocationType, setSelectedLocationType] =
     useState<VideoConferencingPlatform | null>(null);
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
-  const [createdEventId, setCreatedEventId] = useState<string | null>(null);
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -56,6 +61,12 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
   const { data: packagesData } = useQuery({
     queryKey: ["packages"],
     queryFn: getPackagesQueryFn,
+  });
+
+  // Fetch current user availability
+  const { data: availabilityData, isLoading: isAvailabilityLoading } = useQuery({
+    queryKey: ["user_availability"],
+    queryFn: getUserAvailabilityQueryFn,
   });
 
   const packages = packagesData?.packages || [];
@@ -100,6 +111,67 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
     },
   });
 
+  // Availability inline form
+  const timeGapSchema = z
+    .number()
+    .int({ message: "Time gap must be an integer" })
+    .min(1, { message: "Time gap must be at least 1 minute" })
+    .refine((value) => [15, 30, 45, 60, 120].includes(value), {
+      message: "Time gap must be 15, 30, 45, 60, or 120 minutes",
+    });
+
+  const availabilitySchema = z
+    .object({
+      timeGap: timeGapSchema,
+      days: z.array(
+        z.object({
+          day: z.string(),
+          startTime: z.string(),
+          endTime: z.string(),
+          isAvailable: z.boolean(),
+        })
+      ),
+    })
+    .superRefine((data, ctx) => {
+      data.days.forEach((item, index) => {
+        if (item.isAvailable && item.startTime && item.endTime) {
+          if (item.endTime <= item.startTime) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "End time must be greater than start time",
+              path: ["availability", index, "startTime"],
+            });
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "End time must be greater than start time",
+              path: ["availability", index, "endTime"],
+            });
+          }
+        }
+      });
+    });
+
+  type WeeklyHoursFormData = z.infer<typeof availabilitySchema>;
+
+  const availabilityForm = useForm<WeeklyHoursFormData>({
+    resolver: zodResolver(availabilitySchema),
+    mode: "onChange",
+    defaultValues: {
+      timeGap: 30,
+      days: [],
+    },
+  });
+
+  useEffect(() => {
+    const avail = availabilityData?.availability;
+    if (avail) {
+      availabilityForm.reset({
+        timeGap: avail.timeGap,
+        days: (avail.days || []) as DayAvailabilityType[],
+      });
+    }
+  }, [availabilityData, availabilityForm]);
+
   const { isValid } = form.formState;
 
   const handleLocationTypeChange = (value: VideoConferencingPlatform) => {
@@ -109,63 +181,93 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
   };
 
   const handlePackageToggle = (packageId: string) => {
-    setSelectedPackages(prev => 
+    setSelectedPackages(prev =>
       prev.includes(packageId)
         ? prev.filter(id => id !== packageId)
         : [...prev, packageId]
     );
   };
 
-  const onSubmit = (data: EventFormData) => {
-    console.log("Form Data:", data);
-    mutate(
-      {
+  const handleTimeSelect = useCallback(
+    (day: string, field: "startTime" | "endTime", time: string) => {
+      const index = availabilityForm
+        .getValues("days")
+        .findIndex((item) => item.day === day);
+      if (index !== -1) {
+        availabilityForm.setValue(`days.${index}.${field}` as const, time, {
+          shouldValidate: true,
+        });
+        availabilityForm.trigger(`days.${index}.startTime` as const);
+        availabilityForm.trigger(`days.${index}.endTime` as const);
+      }
+    },
+    [availabilityForm]
+  );
+
+  const onRemove = useCallback(
+    (day: string) => {
+      const index = availabilityForm
+        .getValues("days")
+        .findIndex((item) => item.day === day);
+      if (index !== -1) {
+        availabilityForm.setValue(`days.${index}.isAvailable` as const, false);
+        availabilityForm.setValue(`days.${index}.startTime` as const, "09:00");
+        availabilityForm.setValue(`days.${index}.endTime` as const, "17:00");
+      }
+    },
+    [availabilityForm]
+  );
+
+  const onSubmit = async (data: EventFormData) => {
+    try {
+      // Validate availability before proceeding
+      const availabilityIsValid = await availabilityForm.trigger();
+      if (!availabilityIsValid) {
+        toast.error("Please fix availability errors");
+        return;
+      }
+
+      // Save availability changes
+      const availabilityValues = availabilityForm.getValues();
+      await updateAvailabilityMutation.mutateAsync(availabilityValues);
+
+      // Create event
+      const response = await createEvent({
         ...data,
         duration: data.duration,
         description: data.description || "",
         startDate: data.startDate || undefined,
         endDate: data.endDate || undefined,
         showDateRange: data.showDateRange || false,
-      },
-      {
-        onSuccess: (response) => {
-          // Store the created event ID for package assignment
-          setCreatedEventId(response.data.event.id);
-          
-          // If packages are selected, assign them to the event
-          if (selectedPackages.length > 0) {
-            assignPackagesMutation.mutate(
-              {
-                eventId: response.data.event.id,
-                packageIds: selectedPackages,
-              },
-              {
-                onSuccess: () => {
-                  toast.success("Event created and packages assigned successfully");
-                },
-                onError: () => {
-                  toast.error("Event created but failed to assign packages");
-                },
-              }
-            );
-          } else {
-            toast.success("Event created successfully");
-          }
-          
-          queryClient.invalidateQueries({
-            queryKey: ["event_list"],
+      });
+
+      const eventId = (response as any)?.data?.event?.id;
+
+      // Optional: assign packages
+      if (eventId && selectedPackages.length > 0) {
+        try {
+          await assignPackagesMutation.mutateAsync({
+            eventId,
+            packageIds: selectedPackages,
           });
-          setSelectedLocationType(null);
-          setSelectedPackages([]);
-          setCreatedEventId(null);
-          setIsOpen(false);
-          form.reset();
-        },
-        onError: () => {
-          toast.error("Failed to create event");
-        },
+          toast.success("Event created and packages assigned successfully");
+        } catch {
+          toast.error("Event created but failed to assign packages");
+        }
+      } else {
+        toast.success("Event created successfully");
       }
-    );
+
+      queryClient.invalidateQueries({
+        queryKey: ["event_list"],
+      });
+      setSelectedLocationType(null);
+      setSelectedPackages([]);
+      setIsOpen(false);
+      form.reset();
+    } catch (err) {
+      toast.error("Failed to create event");
+    }
   };
 
   return (
@@ -183,16 +285,16 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
           <span>New Event Type</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[800px] lg:max-w-[900px] !px-0 pb-0">
-        <DialogHeader className="px-6">
+      <DialogContent className="sm:max-w-[800px] lg:max-w-[900px] !px-0 pb-0 h-[90vh] md:h-[85vh] max-h-[90vh] flex flex-col !overflow-hidden min-h-0">
+        <DialogHeader className="px-6 shrink-0">
           <DialogTitle className="text-xl">Add a new event type</DialogTitle>
           <DialogDescription>
             Create a new event type for people to book times with.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="px-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <div className="px-6 flex-1 overflow-y-auto overscroll-contain min-h-0">
               {/* Top Row - Event Name and Duration */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <FormField
@@ -401,14 +503,81 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
                   )}
                 />
               </div>
+
+              {/* Availability Settings (Relocated here) */}
+              <div className="mb-4">
+                <Label className="font-semibold !text-base">Availability</Label>
+                <div className="text-sm text-muted-foreground mb-2">Set your weekly hours and time gap. These settings determine when people can book this and your other events.</div>
+
+                <Form {...availabilityForm}>
+                  <div className="space-y-3 pt-0">
+                    {/* Time Gap Input */}
+                    <FormField
+                      name="timeGap"
+                      control={availabilityForm.control}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-4 p-0 pb-1 mt-2">
+                          <Label className="text-[15px] font-medium shrink-0">
+                            Time Gap (mins):
+                          </Label>
+                          <div className="relative w-full max-w-[140px]">
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="number"
+                                className="w-[120px] !py-[10px] min-h-[46px] px-[14px] !h-auto"
+                                value={field.value || ""}
+                                min={1}
+                                onChange={(e) => {
+                                  const value = e.target.value.trim();
+                                  if (value === "") {
+                                    field.onChange(null);
+                                  } else {
+                                    const parsedValue = parseInt(value, 10);
+                                    if (!isNaN(parsedValue) && parsedValue > 0) {
+                                      field.onChange(parsedValue);
+                                    }
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage className="absolute top-full left-0 mt-2" />
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Days list */}
+                    <div className="space-y-1">
+                      {isAvailabilityLoading ? (
+                        <div className="text-sm text-muted-foreground py-4">Loading availability...</div>
+                      ) : (
+                        availabilityForm.watch("days").map((day, index) => (
+                          <DayAvailability
+                            key={day.day}
+                            day={day.day}
+                            startTime={day.startTime}
+                            endTime={day.endTime}
+                            isAvailable={day.isAvailable}
+                            index={index}
+                            form={availabilityForm as unknown as any}
+                            dayMapping={dayMapping}
+                            onRemove={onRemove}
+                            onTimeSelect={handleTimeSelect}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </Form>
+              </div>
             </div>
 
             <DialogFooter
-              className="bg-[#f6f7f9] border-t px-6 py-3 !mt-6
-             border-[#e5e7eb] rounded-b-[8px]"
+              className="bg-[#f6f7f9] border-t px-6 py-3 !mt-6 border-[#e5e7eb] rounded-b-[8px] sticky bottom-0 z-10 shrink-0"
             >
-              <Button type="submit" disabled={!isValid || isPending}>
-                {isPending ? (
+              <Button type="submit" disabled={!isValid || isCreatingEvent || updateAvailabilityMutation.isPending}>
+                {isCreatingEvent || updateAvailabilityMutation.isPending ? (
                   <Loader size="sm" color="white" />
                 ) : (
                   <span>Create</span>

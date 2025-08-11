@@ -17,7 +17,6 @@ import {
   PackageResponseType,
   SinglePackageResponseType,
   AssignPackagesToEventType,
-  SelectPackageForBookingType,
   AvailableEventsResponseType,
   PendingBookingsResponseType,
   AllBookingsResponseType,
@@ -48,6 +47,11 @@ export const toggleEventVisibilityMutationFn = async (data: {
 
 export const geteventListQueryFn = async (): Promise<UserEventListResponse> => {
   const response = await API.get(`/event/all`);
+  return response.data;
+};
+
+export const deleteEventMutationFn = async (eventId: string): Promise<{ message: string }> => {
+  const response = await API.delete(`/event/${eventId}`);
   return response.data;
 };
 

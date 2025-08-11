@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "@/components/loader";
-import { ErrorAlert } from "@/components/ErrorAlert";
 import ImageZoomModal from "@/components/ui/image-zoom-modal";
 import {
   User,
@@ -40,7 +39,7 @@ const BookingStatus = () => {
     fileName: "",
   });
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["bookingStatus", searchEmail],
     queryFn: () => getBookingStatusQueryFn(searchEmail),
     enabled: !!searchEmail,

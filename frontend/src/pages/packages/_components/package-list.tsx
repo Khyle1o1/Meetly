@@ -1,4 +1,4 @@
-import { useState } from "react";
+// import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deletePackageMutationFn } from "@/lib/api";
 import { Package } from "@/types/package.type";
@@ -8,7 +8,6 @@ interface PackageListProps {
 }
 
 const PackageList = ({ packages }: PackageListProps) => {
-  const [editingPackage, setEditingPackage] = useState<Package | null>(null);
   const queryClient = useQueryClient();
 
   const deletePackageMutation = useMutation({
@@ -24,8 +23,8 @@ const PackageList = ({ packages }: PackageListProps) => {
     }
   };
 
-  const handleEdit = (package_: Package) => {
-    setEditingPackage(package_);
+  const handleEdit = (_package: Package) => {
+    // TODO: Implement edit flow
   };
 
   return (

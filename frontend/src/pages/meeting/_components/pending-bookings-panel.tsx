@@ -13,7 +13,7 @@ import {
   getPendingBookingsQueryFn, 
   updateMeetingStatusMutationFn 
 } from "@/lib/api";
-import { ENV, getBackendBaseUrl } from "@/lib/get-env";
+import { getBackendBaseUrl } from "@/lib/get-env";
 
 const PendingBookingsPanel: FC = () => {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
