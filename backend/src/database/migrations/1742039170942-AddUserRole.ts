@@ -4,21 +4,41 @@ export class AddUserRole1742039170942 implements MigrationInterface {
     name = 'AddUserRole1742039170942'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        // Create the enum type first
-        await queryRunner.query(`CREATE TYPE "public"."users_role_enum" AS ENUM('user', 'admin')`);
+        // Check if enum type exists before creating it
+        const enumExists = await queryRunner.query(`
+            SELECT EXISTS (
+                SELECT 1 FROM pg_type 
+                WHERE typname = 'users_role_enum' 
+                AND typtype = 'e'
+            )
+        `);
         
-        // Add the role column with default value
-        await queryRunner.query(`ALTER TABLE "users" ADD "role" "public"."users_role_enum" NOT NULL DEFAULT 'user'`);
+        if (!enumExists[0].exists) {
+            await queryRunner.query(`CREATE TYPE "public"."users_role_enum" AS ENUM('user', 'admin')`);
+        }
         
-        // Update existing admin user to have admin role
-        await queryRunner.query(`UPDATE "users" SET "role" = 'admin' WHERE "email" = 'admin@meetly.com'`);
+        // Check if role column exists before adding it
+        const roleColumnExists = await queryRunner.query(`
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'users' 
+                AND column_name = 'role'
+            )
+        `);
+        
+        if (!roleColumnExists[0].exists) {
+            await queryRunner.query(`ALTER TABLE "users" ADD "role" "public"."users_role_enum" NOT NULL DEFAULT 'user'`);
+            
+            // Update existing admin user to have admin role
+            await queryRunner.query(`UPDATE "users" SET "role" = 'admin' WHERE "email" = 'admin@meetly.com'`);
+        }
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         // Remove the role column
-        await queryRunner.query(`ALTER TABLE "users" DROP COLUMN "role"`);
+        await queryRunner.query(`ALTER TABLE "users" DROP COLUMN IF EXISTS "role"`);
         
         // Drop the enum type
-        await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
+        await queryRunner.query(`DROP TYPE IF EXISTS "public"."users_role_enum"`);
     }
 } 

@@ -4,23 +4,23 @@ export class UpdateMeetingTable1754492264097 implements MigrationInterface {
     name = 'UpdateMeetingTable1754492264097'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP INDEX "public"."IDX_integrations_user_id"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_integrations_app_type"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_packages_user_id"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_packages_is_active"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_meetings_user_id"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_meetings_event_id"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_meetings_status"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_meetings_start_time"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_meetings_guest_email"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_events_user_id"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_events_slug"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_events_is_private"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_events_created_at"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_day_availability_availability_id"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_day_availability_day"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_users_email"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_users_username"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_integrations_user_id"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_integrations_app_type"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_packages_user_id"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_packages_is_active"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_meetings_user_id"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_meetings_event_id"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_meetings_status"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_meetings_start_time"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_meetings_guest_email"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_events_user_id"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_events_slug"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_events_is_private"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_events_created_at"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_day_availability_availability_id"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_day_availability_day"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_users_email"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_users_username"`);
         await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "firstName" DROP DEFAULT`);
         await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "lastName" DROP DEFAULT`);
     }
