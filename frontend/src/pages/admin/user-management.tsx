@@ -31,7 +31,7 @@ const UserManagement = () => {
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   // Get current user state
-  const { user, accessToken } = useStore();
+  const { accessToken } = useStore();
 
   // Search users query
   const { 

@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useState } from "react";
 import { ChevronDown, Trash2Icon, ZoomIn, ChevronUp, Package2, DollarSign, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,6 @@ import { format, parseISO } from "date-fns";
 import { locationOptions } from "@/lib/types";
 import { PeriodEnum } from "@/hooks/use-meeting-filter";
 import { Loader } from "@/components/loader";
-import { cn } from "@/lib/utils";
 import ImageZoomModal from "@/components/ui/image-zoom-modal";
 import { getBackendBaseUrl } from "@/lib/get-env";
 
@@ -33,7 +32,6 @@ const MeetingCard = (props: {
     imageUrl: "",
     fileName: "",
   });
-  const detailsRef = useRef<HTMLDivElement>(null);
 
   // Format the date and time
   const startTime = parseISO(meeting.startTime);
