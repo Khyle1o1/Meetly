@@ -3,9 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Users, Shield, User } from "lucide-react";
+import { Search, Users, Shield, User, Loader2, Trash2 } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useStore } from "@/store/store";
 
 interface User {
   id: string;
@@ -27,48 +28,68 @@ interface UserSearchResponse {
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+
+  // Get current user state
+  const { user, accessToken } = useStore();
 
   // Search users query
-  const { data: searchData, refetch: refetchUsers } = useQuery({
+  const { 
+    data: searchData, 
+    refetch: refetchUsers, 
+    isLoading: isSearchLoading,
+    error: searchError 
+  } = useQuery({
     queryKey: ["users", searchTerm, currentPage],
     queryFn: async (): Promise<UserSearchResponse> => {
       const response = await fetch(
         `/api/admin/search?q=${encodeURIComponent(searchTerm)}&page=${currentPage}&limit=10`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch users");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch users");
       }
-      return response.json();
+      const data = await response.json();
+      return data;
     },
-    enabled: searchTerm.length > 0,
+    enabled: searchTerm.length > 0 && !!accessToken,
   });
 
   // Get all users query
-  const { data: allUsersData, refetch: refetchAllUsers } = useQuery({
+  const { 
+    data: allUsersData, 
+    refetch: refetchAllUsers, 
+    isLoading: isAllUsersLoading,
+    error: allUsersError 
+  } = useQuery({
     queryKey: ["all-users", currentPage],
     queryFn: async (): Promise<UserSearchResponse> => {
       const response = await fetch(
         `/api/admin/?page=${currentPage}&limit=10`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch users");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch users");
       }
-      return response.json();
+      const data = await response.json();
+      return data;
     },
-    enabled: searchTerm.length === 0,
+    enabled: searchTerm.length === 0 && !!accessToken,
   });
 
   const data = searchTerm.length > 0 ? searchData : allUsersData;
+  const isLoading = searchTerm.length > 0 ? isSearchLoading : isAllUsersLoading;
+  const error = searchTerm.length > 0 ? searchError : allUsersError;
 
   // Update user role mutation
   const updateRoleMutation = useMutation({
@@ -77,12 +98,13 @@ const UserManagement = () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ role }),
       });
       if (!response.ok) {
-        throw new Error("Failed to update user role");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to update user role");
       }
       return response.json();
     },
@@ -91,8 +113,36 @@ const UserManagement = () => {
       refetchUsers();
       refetchAllUsers();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error.message || "Failed to update user role");
+    },
+  });
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      setDeletingUserId(userId);
+      const response = await fetch(`/api/admin/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to delete user");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("User deleted successfully");
+      refetchUsers();
+      refetchAllUsers();
+      setDeletingUserId(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete user");
+      setDeletingUserId(null);
     },
   });
 
@@ -109,6 +159,24 @@ const UserManagement = () => {
     const newRole = currentRole === "admin" ? "user" : "admin";
     updateRoleMutation.mutate({ userId, role: newRole });
   };
+
+  const handleDeleteUser = (userId: string, userName: string) => {
+    if (window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+      deleteUserMutation.mutate(userId);
+    }
+  };
+
+  // Handle errors
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-8">
+          <div className="text-red-600 mb-4">Error loading users</div>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6">
@@ -137,7 +205,16 @@ const UserManagement = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSearch()}
             />
-            <Button onClick={handleSearch}>Search</Button>
+            <Button onClick={handleSearch} disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                "Search"
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -158,7 +235,12 @@ const UserManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {data?.users && data.users.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+              <div className="text-gray-500">Loading users...</div>
+            </div>
+          ) : data?.users && data.users.length > 0 ? (
             <div className="space-y-4">
               {data.users.map((user) => (
                 <div
@@ -195,8 +277,35 @@ const UserManagement = () => {
                       onClick={() => handleRoleToggle(user.id, user.role)}
                       disabled={updateRoleMutation.isPending}
                     >
-                      {user.role === "admin" ? "Remove Admin" : "Make Admin"}
+                      {updateRoleMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        user.role === "admin" ? "Remove Admin" : "Make Admin"
+                      )}
                     </Button>
+                    {user.role !== "admin" && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteUser(user.id, user.name)}
+                        disabled={deletingUserId === user.id || updateRoleMutation.isPending}
+                      >
+                        {deletingUserId === user.id ? (
+                          <>
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -214,7 +323,7 @@ const UserManagement = () => {
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
+                disabled={currentPage === 1 || isLoading}
               >
                 Previous
               </Button>
@@ -224,7 +333,7 @@ const UserManagement = () => {
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === data.totalPages}
+                disabled={currentPage === data.totalPages || isLoading}
               >
                 Next
               </Button>

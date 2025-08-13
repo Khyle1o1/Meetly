@@ -6,6 +6,7 @@ import {
   getUserByIdController,
   updateUserRoleController,
   searchUsersController,
+  deleteUserController,
 } from "../controllers/userManagement.controller";
 
 const userManagementRoutes = Router();
@@ -21,5 +22,8 @@ userManagementRoutes.get("/:userId", passportAuthenticateJwt, requireAdmin, getU
 
 // Update user role (make admin/remove admin)
 userManagementRoutes.patch("/:userId/role", passportAuthenticateJwt, requireAdmin, updateUserRoleController);
+
+// Delete user
+userManagementRoutes.delete("/:userId", passportAuthenticateJwt, requireAdmin, deleteUserController);
 
 export default userManagementRoutes; 

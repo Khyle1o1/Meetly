@@ -8,6 +8,7 @@ import {
   getUserByIdService,
   updateUserRoleService,
   searchUsersService,
+  deleteUserService,
 } from "../services/userManagement.service";
 
 export const getAllUsersController = asyncHandler(async (req: Request, res: Response) => {
@@ -38,10 +39,11 @@ export const getUserByIdController = asyncHandler(async (req: Request, res: Resp
 
 export const updateUserRoleController = asyncHandler(
   async (req: Request, res: Response) => {
-    const { userId, newRole } = req.body;
+    const { userId } = req.params;
+    const { role: newRole } = req.body;
     const adminId = (req.user as any)?.id as string;
     
-    const updatedUser = await updateUserRoleService(adminId, userId, newRole);
+    const updatedUser = await updateUserRoleService(userId, newRole, adminId);
     
     res.status(HTTPSTATUS.OK).json({
       message: "User role updated successfully",
@@ -70,6 +72,18 @@ export const searchUsersController = asyncHandler(async (req: Request, res: Resp
   
   res.status(HTTPSTATUS.OK).json({
     message: "Users search completed successfully",
+    ...result,
+  });
+});
+
+export const deleteUserController = asyncHandler(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const adminId = (req.user as any)?.id as string;
+  
+  const result = await deleteUserService(userId, adminId);
+  
+  res.status(HTTPSTATUS.OK).json({
+    message: "User deleted successfully",
     ...result,
   });
 });

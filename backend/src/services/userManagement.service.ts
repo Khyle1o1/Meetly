@@ -101,4 +101,40 @@ export const searchUsersService = async (searchTerm: string, page: number = 1, l
     limit,
     totalPages: Math.ceil(total / limit)
   };
+};
+
+export const deleteUserService = async (userId: string, adminUserId: string) => {
+  const userRepository = AppDataSource.getRepository(User);
+  
+  // Verify the admin user exists and is actually an admin
+  const adminUser = await userRepository.findOne({
+    where: { id: adminUserId, role: UserRole.ADMIN }
+  });
+  
+  if (!adminUser) {
+    throw new BadRequestException("Only admins can delete users");
+  }
+  
+  // Prevent admin from deleting themselves
+  if (userId === adminUserId) {
+    throw new BadRequestException("Cannot delete your own account");
+  }
+  
+  const user = await userRepository.findOne({
+    where: { id: userId }
+  });
+  
+  if (!user) {
+    throw new NotFoundException("User not found");
+  }
+  
+  // Prevent deletion of other admin users
+  if (user.role === UserRole.ADMIN) {
+    throw new BadRequestException("Cannot delete other admin users");
+  }
+  
+  // Delete the user
+  await userRepository.remove(user);
+  
+  return { message: "User deleted successfully" };
 }; 
