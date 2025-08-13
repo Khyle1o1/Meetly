@@ -17,7 +17,7 @@ const options: StrategyOptions = {
 };
 
 passport.use(
-  new JwtStrategy(options, async (payload: JwtPayload, done) => {
+  new JwtStrategy(options, async (payload: JwtPayload, done: (error: any, user?: any) => void) => {
     try {
       const user = await findByIdUserService(payload.userId);
       if (!user) {
@@ -30,8 +30,8 @@ passport.use(
   })
 );
 
-passport.serializeUser((user: any, done) => done(null, user));
-passport.deserializeUser((user: any, done) => done(null, user));
+passport.serializeUser((user: any, done: (error: any, id?: any) => void) => done(null, user));
+passport.deserializeUser((user: any, done: (error: any, user?: any) => void) => done(null, user));
 
 export const passportAuthenticateJwt = passport.authenticate("jwt", {
   session: false,
