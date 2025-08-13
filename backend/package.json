@@ -12,6 +12,7 @@
     "db:migrate": "npm run typeorm -- migration:run",
     "db:revert": "npm run typeorm -- migration:revert",
     "db:drop": "npm run typeorm -- schema:drop",
+    "db:reset-migrations": "ts-node scripts/reset-migrations.ts",
     "db:clear-data": "ts-node scripts/drop-all-data.ts",
     "create-admin-account": "ts-node scripts/create-admin-account.ts",
     "test-admin-login": "ts-node scripts/test-admin-login.ts",
