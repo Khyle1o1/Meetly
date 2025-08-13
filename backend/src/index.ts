@@ -46,10 +46,8 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
 app.get(
   "/",
   asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    throw new BadRequestException("throwing async error");
-    res.status(HTTPSTATUS.OK).json({
-      message: "Hello Subscribe to the channel",
-    });
+    // Redirect to frontend
+    res.redirect(config.FRONTEND_ORIGIN);
   })
 );
 
@@ -63,6 +61,13 @@ app.use(`${BASE_PATH}/package`, packageRoutes);
 app.use(`${BASE_PATH}/school`, schoolRoutes);
 app.use(`${BASE_PATH}/admin`, adminStatisticsRoutes);
 app.use(`${BASE_PATH}/admin`, userManagementRoutes);
+
+// Redirect public event URLs to frontend
+app.get("/:username/:slug", (req: Request, res: Response) => {
+  const { username, slug } = req.params;
+  const frontendUrl = `${config.FRONTEND_ORIGIN}/${username}/${slug}`;
+  res.redirect(frontendUrl);
+});
 
 app.use(errorHandler);
 
