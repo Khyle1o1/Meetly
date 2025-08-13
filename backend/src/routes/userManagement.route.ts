@@ -13,13 +13,13 @@ const userManagementRoutes = Router();
 // Get all users with optional search and pagination
 userManagementRoutes.get("/", passportAuthenticateJwt, requireAdmin, getAllUsersController);
 
+// Search users
+userManagementRoutes.get("/search", passportAuthenticateJwt, requireAdmin, searchUsersController);
+
 // Get specific user by ID
 userManagementRoutes.get("/:userId", passportAuthenticateJwt, requireAdmin, getUserByIdController);
 
 // Update user role (make admin/remove admin)
 userManagementRoutes.patch("/:userId/role", passportAuthenticateJwt, requireAdmin, updateUserRoleController);
-
-// Search users
-userManagementRoutes.get("/search", passportAuthenticateJwt, requireAdmin, searchUsersController);
 
 export default userManagementRoutes; 

@@ -61,8 +61,8 @@ app.use(`${BASE_PATH}/integration`, integrationRoutes);
 app.use(`${BASE_PATH}/meeting`, meetingRoutes);
 app.use(`${BASE_PATH}/package`, packageRoutes);
 app.use(`${BASE_PATH}/school`, schoolRoutes);
-app.use(`${BASE_PATH}/admin`, userManagementRoutes);
 app.use(`${BASE_PATH}/admin`, adminStatisticsRoutes);
+app.use(`${BASE_PATH}/admin`, userManagementRoutes);
 
 app.use(errorHandler);
 
