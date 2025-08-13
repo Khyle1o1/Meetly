@@ -23,16 +23,22 @@ export class AddPerformanceIndexes1742039170941 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_meetings_start_time" ON "meetings" ("startTime")`);
         await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_meetings_guest_email" ON "meetings" ("guestEmail")`);
         
-        // Packages table indexes
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_packages_user_id" ON "packages" ("userId")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_packages_is_active" ON "packages" ("isActive")`);
+        // Packages table indexes - check if table exists first
+        const packagesTableExists = await queryRunner.query(`
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables 
+                WHERE table_name = 'packages'
+            )
+        `);
+        
+        if (packagesTableExists[0].exists) {
+            await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_packages_user_id" ON "packages" ("userId")`);
+            await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_packages_is_active" ON "packages" ("isActive")`);
+        }
         
         // Integrations table indexes
         await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_integrations_user_id" ON "integrations" ("userId")`);
         await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_integrations_app_type" ON "integrations" ("app_type")`);
-        
-        // Availability table indexes
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_availability_user_id" ON "availability" ("userId")`);
         
         // Day availability table indexes
         await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_day_availability_availability_id" ON "day_availability" ("availabilityId")`);
@@ -56,7 +62,6 @@ export class AddPerformanceIndexes1742039170941 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX IF EXISTS "IDX_packages_is_active"`);
         await queryRunner.query(`DROP INDEX IF EXISTS "IDX_integrations_user_id"`);
         await queryRunner.query(`DROP INDEX IF EXISTS "IDX_integrations_app_type"`);
-        await queryRunner.query(`DROP INDEX IF EXISTS "IDX_availability_user_id"`);
         await queryRunner.query(`DROP INDEX IF EXISTS "IDX_day_availability_availability_id"`);
         await queryRunner.query(`DROP INDEX IF EXISTS "IDX_day_availability_day"`);
     }
