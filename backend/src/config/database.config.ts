@@ -8,6 +8,34 @@ export const getDatabaseConfig = () => {
   const isProduction = config.NODE_ENV === "production";
   const databaseUrl = config.DATABASE_URL;
 
+  // Determine SSL configuration based on environment and URL
+  let sslConfig: any = false;
+  
+  if (isProduction) {
+    // For production, check if the database URL requires SSL
+    if (databaseUrl && databaseUrl.includes('sslmode=')) {
+      // If SSL mode is explicitly set in the URL, respect it
+      sslConfig = {
+        rejectUnauthorized: false, // Allow self-signed certificates
+      };
+    } else if (databaseUrl && (databaseUrl.includes('render.com') || databaseUrl.includes('heroku.com') || databaseUrl.includes('supabase.co'))) {
+      // For Render, Heroku, and Supabase, SSL is typically required
+      sslConfig = {
+        rejectUnauthorized: false, // Allow self-signed certificates
+      };
+    } else {
+      // For other production databases, try SSL with self-signed certificate support
+      sslConfig = {
+        rejectUnauthorized: false, // Allow self-signed certificates
+      };
+    }
+  } else {
+    // For development, SSL is optional
+    sslConfig = {
+      rejectUnauthorized: false,
+    };
+  }
+
   return new DataSource({
     type: "postgres",
     url: databaseUrl,
@@ -15,13 +43,7 @@ export const getDatabaseConfig = () => {
     migrations: [path.join(__dirname, "../database/migrations/*{.ts,.js}")],
     synchronize: false, // Disable synchronize for better performance
     logging: isProduction ? false : ["error"],
-    ssl: isProduction
-      ? {
-          rejectUnauthorized: true,
-        }
-      : {
-          rejectUnauthorized: false,
-        },
+    ssl: sslConfig,
     // Add connection pooling for better performance
     extra: {
       max: 20, // Maximum number of connections in the pool
