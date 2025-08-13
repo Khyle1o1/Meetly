@@ -218,7 +218,7 @@ export const createMeetBookingForGuestService = async (
   if (selectedPackageId) {
     selectedPackage = await packageRepository.findOne({
       where: { id: selectedPackageId, isActive: true },
-      select: ["id", "name", "price"], // Only select needed fields
+      select: ["id", "name", "description", "price", "duration", "inclusions"], // Select all needed fields for email
     });
 
     if (!selectedPackage) {
@@ -297,6 +297,13 @@ export const createMeetBookingForGuestService = async (
         eventTitle: event.title,
         startTime,
         endTime,
+        selectedPackage: selectedPackage ? {
+          name: selectedPackage.name,
+          description: selectedPackage.description,
+          price: selectedPackage.price,
+          duration: selectedPackage.duration,
+          inclusions: selectedPackage.inclusions,
+        } : undefined,
       }
     );
   } catch (error) {
@@ -320,7 +327,6 @@ export const updateMeetingStatusService = async (
   const meeting = await meetingRepository.findOne({
     where: { id: meetingId },
     relations: ["event", "event.user", "selectedPackage"],
-    select: ["id", "status", "startTime", "endTime", "guestEmail", "firstName", "lastName", "adminMessage"], // Only select needed fields
   });
 
   if (!meeting) throw new NotFoundException("Meeting not found");
@@ -394,6 +400,13 @@ export const updateMeetingStatusService = async (
         endTime: meeting.endTime,
         status: meeting.status,
         adminMessage: meeting.adminMessage,
+        selectedPackage: meeting.selectedPackage ? {
+          name: meeting.selectedPackage.name,
+          description: meeting.selectedPackage.description,
+          price: meeting.selectedPackage.price,
+          duration: meeting.selectedPackage.duration,
+          inclusions: meeting.selectedPackage.inclusions,
+        } : undefined,
       }
     );
   } catch (error) {

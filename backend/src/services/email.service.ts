@@ -33,6 +33,13 @@ export const sendBookingConfirmationEmail = async (
     endTime: Date;
     status: string;
     adminMessage?: string;
+    selectedPackage?: {
+      name: string;
+      description?: string;
+      price: number;
+      duration?: string;
+      inclusions?: string;
+    };
   }
 ) => {
   try {
@@ -62,6 +69,13 @@ export const sendBookingConfirmationEmail = async (
       }
     };
 
+    const formatPrice = (price: number) => {
+      return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP'
+      }).format(price);
+    };
+
     const subject = `Booking ${bookingDetails.status.toLowerCase()} - ${bookingDetails.eventTitle}`;
     
     const html = `
@@ -76,6 +90,29 @@ export const sendBookingConfirmationEmail = async (
           <p><strong>Date & Time:</strong> ${formatDate(bookingDetails.startTime)} - ${formatDate(bookingDetails.endTime)}</p>
           <p><strong>Status:</strong> ${bookingDetails.status}</p>
         </div>
+        
+        ${bookingDetails.selectedPackage ? `
+          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
+            <h3 style="margin-top: 0; color: #2e7d32;">📦 Selected Package</h3>
+            <div style="margin-bottom: 15px;">
+              <p style="margin: 5px 0;"><strong>Package Name:</strong> ${bookingDetails.selectedPackage.name}</p>
+              <p style="margin: 5px 0;"><strong>Price:</strong> ${formatPrice(bookingDetails.selectedPackage.price)}</p>
+              ${bookingDetails.selectedPackage.duration ? `<p style="margin: 5px 0;"><strong>Duration:</strong> ${bookingDetails.selectedPackage.duration}</p>` : ''}
+            </div>
+            ${bookingDetails.selectedPackage.description ? `
+              <div style="margin-bottom: 15px;">
+                <p style="margin: 5px 0;"><strong>Description:</strong></p>
+                <p style="margin: 5px 0; color: #555; font-style: italic;">${bookingDetails.selectedPackage.description}</p>
+              </div>
+            ` : ''}
+            ${bookingDetails.selectedPackage.inclusions ? `
+              <div>
+                <p style="margin: 5px 0;"><strong>Inclusions:</strong></p>
+                <p style="margin: 5px 0; color: #555; font-style: italic;">${bookingDetails.selectedPackage.inclusions}</p>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
         
         ${bookingDetails.adminMessage ? `
           <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
@@ -113,6 +150,13 @@ export const sendBookingReceivedEmail = async (
     eventTitle: string;
     startTime: Date;
     endTime: Date;
+    selectedPackage?: {
+      name: string;
+      description?: string;
+      price: number;
+      duration?: string;
+      inclusions?: string;
+    };
   }
 ) => {
   try {
@@ -129,6 +173,13 @@ export const sendBookingReceivedEmail = async (
       }).format(date);
     };
 
+    const formatPrice = (price: number) => {
+      return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP'
+      }).format(price);
+    };
+
     const subject = "Booking Received - Pending Approval";
     
     const html = `
@@ -143,6 +194,29 @@ export const sendBookingReceivedEmail = async (
           <p><strong>Date & Time:</strong> ${formatDate(bookingDetails.startTime)} - ${formatDate(bookingDetails.endTime)}</p>
           <p><strong>Status:</strong> Pending Approval</p>
         </div>
+        
+        ${bookingDetails.selectedPackage ? `
+          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
+            <h3 style="margin-top: 0; color: #2e7d32;">📦 Selected Package</h3>
+            <div style="margin-bottom: 15px;">
+              <p style="margin: 5px 0;"><strong>Package Name:</strong> ${bookingDetails.selectedPackage.name}</p>
+              <p style="margin: 5px 0;"><strong>Price:</strong> ${formatPrice(bookingDetails.selectedPackage.price)}</p>
+              ${bookingDetails.selectedPackage.duration ? `<p style="margin: 5px 0;"><strong>Duration:</strong> ${bookingDetails.selectedPackage.duration}</p>` : ''}
+            </div>
+            ${bookingDetails.selectedPackage.description ? `
+              <div style="margin-bottom: 15px;">
+                <p style="margin: 5px 0;"><strong>Description:</strong></p>
+                <p style="margin: 5px 0; color: #555; font-style: italic;">${bookingDetails.selectedPackage.description}</p>
+              </div>
+            ` : ''}
+            ${bookingDetails.selectedPackage.inclusions ? `
+              <div>
+                <p style="margin: 5px 0;"><strong>Inclusions:</strong></p>
+                <p style="margin: 5px 0; color: #555; font-style: italic;">${bookingDetails.selectedPackage.inclusions}</p>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
         
         <p>You will receive an email notification once your booking has been reviewed.</p>
         <p>Thank you for your patience!</p>
