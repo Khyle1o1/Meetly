@@ -46,7 +46,7 @@ export const getUserMeetingsService = async (
 
   const meetings = await meetingRepository.find({
     where,
-    relations: ["event"],
+    relations: ["event", "event.user", "selectedPackage"],
     order: { startTime: "ASC" },
     // cache: true, // Temporarily disabled caching
   });

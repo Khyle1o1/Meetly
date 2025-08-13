@@ -82,10 +82,7 @@ export const deleteUserController = asyncHandler(async (req: Request, res: Respo
   
   const result = await deleteUserService(userId, adminId);
   
-  res.status(HTTPSTATUS.OK).json({
-    message: "User deleted successfully",
-    ...result,
-  });
+  res.status(HTTPSTATUS.OK).json(result);
 });
 
 // Middleware to ensure admin access for all user management routes

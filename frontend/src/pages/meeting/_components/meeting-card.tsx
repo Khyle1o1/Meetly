@@ -1,6 +1,7 @@
 import { Fragment, useRef, useState } from "react";
-import { ChevronDown, Trash2Icon, ZoomIn } from "lucide-react";
+import { ChevronDown, Trash2Icon, ZoomIn, ChevronUp, Package2, DollarSign, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MeetingType, PeriodType } from "@/types/api.type";
 import { format, parseISO } from "date-fns";
 import { locationOptions } from "@/lib/types";
@@ -17,6 +18,10 @@ const MeetingCard = (props: {
   onCancel: () => void;
 }) => {
   const { meeting, isPending, period, onCancel } = props;
+
+  // Debug logging
+  console.log("Meeting data:", meeting);
+  console.log("Selected package:", meeting.selectedPackage);
 
   const [isShow, setIsShow] = useState(false);
   const [paymentProofModal, setPaymentProofModal] = useState<{
@@ -59,214 +64,187 @@ const MeetingCard = (props: {
         {formattedDate}
       </h2>
 
-      {/* {Event body} */}
-      <div role="buton" className="event-list-body" onClick={toggleDetails}>
-        <div
-          className="flex flex-row bg-white relative w-full p-6 text-left 
-        cursor-pointer transition-colors duration-200 ease-in-out"
-        >
-          <div
-            className="flex-shrink-0 box-border pr-4 pl-10 inline-block
-          mb-[5px]"
-          >
-            <span className="event-time">{formattedTime}</span>
-            <span
-              className={cn(
-                `absolute bg-primary/70
-              top-[20px] left-[23px] inline-block box-border w-[30px]
-             h-[30px] rounded-full`,
-                period === PeriodEnum.CANCELLED && "!bg-destructive/70"
-              )}
-            ></span>
+      <Card className="overflow-hidden border-0 shadow-none">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <CardTitle className="text-lg">
+                {meeting.guestName}
+              </CardTitle>
+              <p className="text-sm text-gray-600">Event type {meeting.event.title}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleDetails}
+                className="p-1 h-auto"
+              >
+                {isShow ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
           </div>
-
-          <div className="flex-1">
-            <h5>
-              <strong>{meeting.guestName}</strong>
-            </h5>
-            <p>
-              Event type <strong> {meeting.event.title}</strong>
-            </p>
+        </CardHeader>
+        
+        {/* Basic info always visible */}
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold">Time:</span> {formattedTime}
+            </div>
+            <div>
+              <span className="font-semibold">Email:</span> {meeting.guestEmail}
+            </div>
           </div>
-          {/* {Meeting detail Button} */}
-          <div className="flex shrink-0">
-            <button className="flex gap-px items-center cursor-pointer !text-[rgba(26,26,26,0.61)] text-base leading-[1.4] whitespace-nowrap">
-              <ChevronDown
-                fill="rgba(26,26,26,0.61)"
-                className=" w-6 h-6
-               !fill-[rgba(26,26,26,0.61)]"
-              />
-              More
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* {Event Details} */}
-      <div
-        ref={detailsRef}
-        className="event-details overflow-hidden transition-all duration-300 ease-in-out"
-        style={{
-          maxHeight: isShow ? `${detailsRef.current?.scrollHeight}px` : "0px",
-          padding: isShow ? "8px 24px 24px 24px" : "0 24px",
-        }}
-      >
-        <div className="flex flex-col-reverse md:flex-row pb-5">
-          {period === PeriodEnum.UPCOMING && (
-            <div className="box-border shrink-0 w-[80%] md:w-[310px] pr-[80px] pl-[40px] mb-5">
-              <div>
-                <Button
-                  variant="outline"
-                  type="button"
-                  className="!w-full border-[#476788] text-[#0a2540] font-normal text-sm"
-                  onClick={onCancel}
-                >
-                  {isPending ? (
-                    <Loader color="black" />
-                  ) : (
-                    <Fragment>
-                      <Trash2Icon />
-                      <span>Cancel</span>
-                    </Fragment>
+          
+          {/* Package information - redesigned to be more attractive */}
+          {meeting.selectedPackage ? (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-xl shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Package2 className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-semibold text-blue-900">{meeting.selectedPackage.name}</h4>
+                    {meeting.selectedPackage.isRecommended && (
+                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 text-blue-700">
+                    <DollarSign className="w-4 h-4" />
+                    <span className="font-medium">₱{meeting.selectedPackage.price.toLocaleString()}</span>
+                  </div>
+                  {meeting.selectedPackage.description && (
+                    <p className="text-sm text-blue-600 mt-1 line-clamp-2">{meeting.selectedPackage.description}</p>
                   )}
-                </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 p-4 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-gray-400 rounded-lg flex items-center justify-center">
+                  <Package2 className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-700">No Package Selected</h4>
+                  <p className="text-sm text-gray-500">This booking was made without a package</p>
+                </div>
               </div>
             </div>
           )}
-          <div className="flex-1">
-            <ul>
-              <li className="mb-4">
-                <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
-                  Email
-                </h5>
-                <p className="font-normal text-[15px]">{meeting.guestEmail}</p>
-              </li>
 
+          {/* Expandable content */}
+          {isShow && (
+            <div className="space-y-4 pt-4 border-t">
               {/* Show additional booking details if available */}
               {isDetailedBooking && (
-                <>
-                  <li className="mb-4">
-                    <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
-                      Contact Number
-                    </h5>
-                    <p className="font-normal text-[15px]">{(meeting as any).contactNumber || 'Not provided'}</p>
-                  </li>
-                  <li className="mb-4">
-                    <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
-                      School
-                    </h5>
-                    <p className="font-normal text-[15px]">{(meeting as any).schoolName || 'Not provided'}</p>
-                  </li>
-                  <li className="mb-4">
-                    <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
-                      Year Level
-                    </h5>
-                    <p className="font-normal text-[15px]">{(meeting as any).yearLevel || 'Not provided'}</p>
-                  </li>
-                  {(meeting as any).selectedPackage && (
-                    <li className="mb-4">
-                      <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
-                        Selected Package
-                      </h5>
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                          {(meeting as any).selectedPackage.name} - ₱{(meeting as any).selectedPackage.price}
-                        </p>
-                      </div>
-                    </li>
-                  )}
-                  {(meeting as any).paymentProofUrl && (
-                    <li className="mb-4">
-                      <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
-                        Payment Proof
-                      </h5>
-                      <div className="mt-2">
-                        <div className="relative group cursor-pointer" onClick={() => {
-                          setPaymentProofModal({
-                            isOpen: true,
-                            imageUrl: `${getBackendBaseUrl()}${(meeting as any).paymentProofUrl}`,
-                            fileName: (meeting as any).paymentProofUrl.split('/').pop() || 'Payment Proof'
-                          });
-                        }}>
-                          <img 
-                            src={`${getBackendBaseUrl()}${(meeting as any).paymentProofUrl}`}
-                            alt="Payment Proof" 
-                            className="max-w-xs rounded-lg border hover:opacity-80 transition-opacity"
-                            onError={(e) => {
-                              console.error("Failed to load payment proof image:", e);
-                              e.currentTarget.style.display = 'none';
-                              // Show a fallback message
-                              const fallbackDiv = document.createElement('div');
-                              fallbackDiv.className = 'text-sm text-gray-500 p-2 border rounded';
-                              fallbackDiv.textContent = 'Payment proof image could not be loaded';
-                              e.currentTarget.parentNode?.appendChild(fallbackDiv);
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                            <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  )}
-                </>
-              )}
-
-              {/* Show package information for all bookings */}
-              {meeting.selectedPackage && (
-                <li className="mb-4">
-                  <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
-                    Selected Package
-                  </h5>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      {meeting.selectedPackage.name} - ₱{meeting.selectedPackage.price}
-                    </p>
+                <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-3 rounded-lg">
+                  <div>
+                    <span className="font-semibold text-gray-700">Contact:</span> 
+                    <p className="text-gray-600">{(meeting as any).contactNumber || 'Not provided'}</p>
                   </div>
-                </li>
+                  <div>
+                    <span className="font-semibold text-gray-700">School:</span> 
+                    <p className="text-gray-600">{(meeting as any).schoolName || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Year Level:</span> 
+                    <p className="text-gray-600">{(meeting as any).yearLevel || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Event:</span> 
+                    <p className="text-gray-600">{meeting.event.title}</p>
+                  </div>
+                </div>
               )}
 
-              <li className="mb-4">
-                <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
-                  Location
-                </h5>
-                <div className="flex items-center mr-6">
-                  {locationOption && (
-                    <>
-                      <img
-                        src={locationOption?.logo as string}
-                        alt={locationOption?.label}
-                        className="w-5 h-5 mr-2"
-                      />
-                      <span className="mt-1 font-normal text-[15px]">
-                        {locationOption?.label}
-                      </span>
-                    </>
-                  )}
+              <div className="grid grid-cols-2 gap-4 text-sm bg-green-50 p-3 rounded-lg">
+                <div>
+                  <span className="font-semibold text-green-700">Location:</span>
+                  <div className="flex items-center mt-1">
+                    {locationOption && (
+                      <>
+                        <img
+                          src={locationOption?.logo as string}
+                          alt={locationOption?.label}
+                          className="w-4 h-4 mr-2"
+                        />
+                        <span className="text-sm text-green-600">{locationOption?.label}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </li>
-              <li className="mb-4">
-                <h5 className="inline-block mb-1 font-bold text-sm leading-[14px] uppercase">
-                  Questions
-                </h5>
-                <p className="font-normal text-[15px]">
-                  {meeting.additionalInfo ? (
-                    meeting.additionalInfo
-                  ) : (
-                    <Fragment>
-                      <span className="block font-light text-sm mb-1 text-[rgba(26,26,26,0.61)]">
-                        Please share anything that will help prepare for our
-                        meeting.
-                      </span>
-                      <span>Nothing</span>
-                    </Fragment>
-                  )}
-                </p>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
+              </div>
+
+              {meeting.additionalInfo && (
+                <div className="bg-yellow-50 p-3 rounded-lg">
+                  <span className="font-semibold text-sm text-yellow-800">Additional Notes:</span>
+                  <p className="text-sm text-yellow-700 mt-1">{meeting.additionalInfo}</p>
+                </div>
+              )}
+
+              {(meeting as any).paymentProofUrl && (
+                <div className="bg-purple-50 p-3 rounded-lg">
+                  <span className="font-semibold text-sm text-purple-800">Payment Proof:</span>
+                  <div className="mt-2">
+                    <div className="relative group cursor-pointer" onClick={() => {
+                      setPaymentProofModal({
+                        isOpen: true,
+                        imageUrl: `${getBackendBaseUrl()}${(meeting as any).paymentProofUrl}`,
+                        fileName: (meeting as any).paymentProofUrl.split('/').pop() || 'Payment Proof'
+                      });
+                    }}>
+                      <img 
+                        src={`${getBackendBaseUrl()}${(meeting as any).paymentProofUrl}`}
+                        alt="Payment Proof" 
+                        className="max-w-xs rounded-lg border hover:opacity-80 transition-opacity"
+                        onError={(e) => {
+                          console.error("Failed to load payment proof image:", e);
+                          e.currentTarget.style.display = 'none';
+                          // Show a fallback message
+                          const fallbackDiv = document.createElement('div');
+                          fallbackDiv.className = 'text-sm text-gray-500 p-2 border rounded';
+                          fallbackDiv.textContent = 'Payment proof image could not be loaded';
+                          e.currentTarget.parentNode?.appendChild(fallbackDiv);
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                        <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {period === PeriodEnum.UPCOMING && (
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="border-red-300 text-red-700 hover:bg-red-50 font-normal text-sm"
+                    onClick={onCancel}
+                  >
+                    {isPending ? (
+                      <Loader color="black" />
+                    ) : (
+                      <Fragment>
+                        <Trash2Icon className="w-4 h-4 mr-2" />
+                        Cancel Booking
+                      </Fragment>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Payment Proof Zoom Modal */}
       <ImageZoomModal
