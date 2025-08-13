@@ -35,7 +35,8 @@ const EventCard: FC<PropsType> = ({
 }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
-  const event_link = `${ENV.VITE_APP_ORIGIN}/${username}/${slug}`;
+  // Use current window location to ensure correct domain in production
+  const event_link = `${window.location.origin}/${username}/${slug}`;
 
   const handleCopyLink = () => {
     navigator.clipboard

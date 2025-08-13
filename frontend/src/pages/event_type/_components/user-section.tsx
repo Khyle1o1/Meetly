@@ -6,7 +6,8 @@ import { useStore } from "@/store/store";
 const UserSection = (props: { username: string }) => {
   const { user } = useStore();
   const username = props.username || user?.username;
-  const my_link = `${ENV.VITE_APP_ORIGIN}/${username}`;
+  // Use current window location to ensure correct domain in production
+  const my_link = `${window.location.origin}/${username}`;
   return (
     <div
       className="w-full flex flex-wrap items-center justify-between 
