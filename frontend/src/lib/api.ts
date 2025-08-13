@@ -241,3 +241,17 @@ export const deleteSchoolMutationFn = async (id: string) => {
   const response = await API.delete(`/school/delete/${id}`);
   return response.data;
 };
+
+//*********** */ Admin Statistics APIS
+
+export const getAdminStatisticsQueryFn = async (): Promise<{
+  message: string;
+  statistics: {
+    totalUsers: number;
+    activeEvents: number;
+    pendingBookings: number;
+  };
+}> => {
+  const response = await API.get("/admin/stats");
+  return response.data;
+};

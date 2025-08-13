@@ -18,6 +18,7 @@ import meetingRoutes from "./routes/meeting.route";
 import packageRoutes from "./routes/package.routes";
 import schoolRoutes from "./routes/school.route";
 import userManagementRoutes from "./routes/userManagement.route";
+import adminStatisticsRoutes from "./routes/adminStatistics.route";
 
 const app = express();
 const BASE_PATH = config.BASE_PATH;
@@ -61,6 +62,7 @@ app.use(`${BASE_PATH}/meeting`, meetingRoutes);
 app.use(`${BASE_PATH}/package`, packageRoutes);
 app.use(`${BASE_PATH}/school`, schoolRoutes);
 app.use(`${BASE_PATH}/admin`, userManagementRoutes);
+app.use(`${BASE_PATH}/admin`, adminStatisticsRoutes);
 
 app.use(errorHandler);
 

@@ -3,9 +3,18 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { PROTECTED_ROUTES } from "@/routes/common/routePaths";
 import { Users, Package, Calendar, Settings } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getAdminStatisticsQueryFn } from "@/lib/api";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+
+  // Fetch admin statistics
+  const { data: statsData, isLoading: isLoadingStats, error: statsError } = useQuery({
+    queryKey: ["adminStatistics"],
+    queryFn: getAdminStatisticsQueryFn,
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+  });
 
   const adminFeatures = [
     {
@@ -37,6 +46,12 @@ const AdminDashboard = () => {
       color: "bg-orange-500",
     },
   ];
+
+  const statistics = statsData?.statistics || {
+    totalUsers: 0,
+    activeEvents: 0,
+    pendingBookings: 0,
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -81,20 +96,41 @@ const AdminDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">0</div>
-                <div className="text-sm text-gray-600">Total Users</div>
+            {isLoadingStats ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-400">Loading...</div>
+                  <div className="text-sm text-gray-600">Total Users</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-400">Loading...</div>
+                  <div className="text-sm text-gray-600">Active Events</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-400">Loading...</div>
+                  <div className="text-sm text-gray-600">Pending Bookings</div>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">0</div>
-                <div className="text-sm text-gray-600">Active Events</div>
+            ) : statsError ? (
+              <div className="text-center text-red-600">
+                Failed to load statistics. Please try again.
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">0</div>
-                <div className="text-sm text-gray-600">Pending Bookings</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{statistics.totalUsers}</div>
+                  <div className="text-sm text-gray-600">Total Users</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{statistics.activeEvents}</div>
+                  <div className="text-sm text-gray-600">Active Events</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">{statistics.pendingBookings}</div>
+                  <div className="text-sm text-gray-600">Pending Bookings</div>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
