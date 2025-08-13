@@ -5,8 +5,8 @@ import { useStore } from "@/store/store";
 const UserSection = (props: { username: string }) => {
   const { user } = useStore();
   const username = props.username || user?.username;
-  // Use current window location to ensure correct domain in production
-  const my_link = `${window.location.origin}/${username}`;
+  // Use the main frontend URL since both services are serving frontend
+  const my_link = `https://meetly-main.onrender.com/${username}`;
   return (
     <div
       className="w-full flex flex-wrap items-center justify-between 

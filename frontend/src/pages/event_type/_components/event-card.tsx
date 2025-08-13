@@ -34,8 +34,8 @@ const EventCard: FC<PropsType> = ({
 }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
-  // Use current window location to ensure correct domain in production
-  const event_link = `${window.location.origin}/${username}/${slug}`;
+  // Use the main frontend URL since both services are serving frontend
+  const event_link = `https://meetly-main.onrender.com/${username}/${slug}`;
 
   const handleCopyLink = () => {
     navigator.clipboard
