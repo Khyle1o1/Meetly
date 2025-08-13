@@ -2,7 +2,6 @@ import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ENV } from "@/lib/get-env";
 import { cn } from "@/lib/utils";
 import { CopyIcon, PackageIcon, Trash2 } from "lucide-react";
 import { FC, useState } from "react";

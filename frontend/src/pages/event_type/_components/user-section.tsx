@@ -1,5 +1,4 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ENV } from "@/lib/get-env";
 import NewEventDialog from "./new-event-dialog";
 import { useStore } from "@/store/store";
 
