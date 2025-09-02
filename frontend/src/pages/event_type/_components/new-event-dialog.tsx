@@ -79,21 +79,53 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
       .min(1, "Duration is required"),
     description: z.string().optional(),
     startDate: z.string().optional(),
-    endDate: z.string().optional(),
+    endDate: z.string().min(1, "End date is required"),
     showDateRange: z.boolean().optional(),
     locationType: z
       .enum([VideoConferencingPlatform.FACE_TO_FACE])
       .refine((value) => value !== undefined, {
         message: "Location type is required",
       }),
-  }).refine((data) => {
-    if (data.startDate && data.endDate) {
-      return new Date(data.startDate) <= new Date(data.endDate);
+  }).superRefine((data, ctx) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Validate start date is not in the past if provided
+    if (data.startDate) {
+      const start = new Date(data.startDate);
+      if (start < today) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Start date cannot be in the past",
+          path: ["startDate"],
+        });
+      }
     }
-    return true;
-  }, {
-    message: "End date must be after start date",
-    path: ["endDate"],
+
+    // End date is required and must not be in the past
+    if (data.endDate) {
+      const end = new Date(data.endDate);
+      if (end < today) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "End date cannot be in the past",
+          path: ["endDate"],
+        });
+      }
+    }
+
+    // If start date present, end date must be >= start date
+    if (data.startDate && data.endDate) {
+      const start = new Date(data.startDate);
+      const end = new Date(data.endDate);
+      if (end < start) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "End date must be on or after start date",
+          path: ["endDate"],
+        });
+      }
+    }
   });
 
   type EventFormData = z.infer<typeof eventSchema>;
@@ -110,6 +142,11 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
       showDateRange: false,
     },
   });
+  // Date constraints for inputs
+  const todayStr = new Date().toISOString().split("T")[0];
+  const startDateValue = form.watch("startDate");
+  const endMin = startDateValue && startDateValue > todayStr ? startDateValue : todayStr;
+
 
   // Availability inline form
   const timeGapSchema = z
@@ -372,6 +409,7 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
                           {...field}
                           type="date"
                           placeholder="Start date"
+                          min={todayStr}
                         />
                       </FormControl>
                       <FormMessage />
@@ -383,12 +421,13 @@ const NewEventDialog = (props: { btnVariant?: string }) => {
                   control={form.control}
                   render={({ field }) => (
                     <FormItem>
-                      <Label className="font-semibold !text-base">End Date (optional)</Label>
+                      <Label className="font-semibold !text-base">End Date</Label>
                       <FormControl className="mt-2">
                         <Input
                           {...field}
                           type="date"
                           placeholder="End date"
+                          min={endMin}
                         />
                       </FormControl>
                       <FormMessage />
