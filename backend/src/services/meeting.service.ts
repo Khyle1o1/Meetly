@@ -10,17 +10,11 @@ import {
   Event,
   EventLocationEnumType,
 } from "../database/entities/event.entity";
-import {
-  Integration,
-  IntegrationAppTypeEnum,
-  IntegrationCategoryEnum,
-} from "../database/entities/integration.entity";
+import { Integration } from "../database/entities/integration.entity";
 import { Package } from "../database/entities/package.entity";
 import { School } from "../database/entities/school.entity";
 import { BadRequestException, NotFoundException } from "../utils/app-error";
-import { validateGoogleToken } from "./integration.service";
-import { googleOAuth2Client } from "../config/oauth.config";
-import { google } from "googleapis";
+// Integrations removed
 import { sendBookingReceivedEmail, sendBookingConfirmationEmail } from "./email.service";
 
 export const getUserMeetingsService = async (
@@ -239,18 +233,7 @@ export const createMeetBookingForGuestService = async (
     throw new BadRequestException("Invalid location type");
   }
 
-  const meetIntegration = event.locationType === EventLocationEnumType.FACE_TO_FACE 
-    ? null 
-    : await integrationRepository.findOne({
-        where: {
-          user: { id: event.user.id },
-          app_type: IntegrationAppTypeEnum[event.locationType as keyof typeof IntegrationAppTypeEnum],
-        },
-        select: ["id", "app_type", "access_token", "refresh_token", "expiry_date"], // Only select needed fields
-      });
-
-  if (!meetIntegration && event.locationType !== EventLocationEnumType.FACE_TO_FACE)
-    throw new BadRequestException("No video conferencing integration found");
+  // For FACE_TO_FACE only, no external integrations required
 
   let meetLink: string = "";
   let calendarEventId: string = "";
@@ -337,45 +320,7 @@ export const updateMeetingStatusService = async (
   if (status === MeetingStatus.APPROVED && meeting.status === MeetingStatus.PENDING) {
     const event = meeting.event;
     
-    if (event.locationType === EventLocationEnumType.GOOGLE_MEET_AND_CALENDAR) {
-      const meetIntegration = await integrationRepository.findOne({
-        where: {
-          user: { id: event.user.id },
-          app_type: IntegrationAppTypeEnum[event.locationType as keyof typeof IntegrationAppTypeEnum],
-        },
-        select: ["id", "app_type", "access_token", "refresh_token", "expiry_date"], // Only select needed fields
-      });
-
-      if (meetIntegration) {
-        const { calendarType, calendar } = await getCalendarClient(
-          meetIntegration.app_type,
-          meetIntegration.access_token,
-          meetIntegration.refresh_token,
-          meetIntegration.expiry_date
-        );
-
-        const response = await calendar.events.insert({
-          calendarId: "primary",
-          conferenceDataVersion: 1,
-          requestBody: {
-            summary: `${meeting.firstName} ${meeting.lastName} - ${event.title}`,
-            description: meeting.additionalInfo,
-            start: { dateTime: meeting.startTime.toISOString() },
-            end: { dateTime: meeting.endTime.toISOString() },
-            attendees: [{ email: meeting.guestEmail }, { email: event.user.email }],
-            conferenceData: {
-              createRequest: {
-                requestId: `${event.id}-${Date.now()}`,
-              },
-            },
-          },
-        });
-
-        meeting.meetLink = response.data.hangoutLink!;
-        meeting.calendarEventId = response.data.id!;
-        meeting.calendarAppType = calendarType;
-      }
-    }
+    // No external calendar integration; keep meetLink/calendarEventId empty
 
     // Update status to SCHEDULED for approved meetings
     meeting.status = MeetingStatus.SCHEDULED;
@@ -428,71 +373,11 @@ export const cancelMeetingService = async (meetingId: string) => {
   });
   if (!meeting) throw new NotFoundException("Meeting not found");
 
-  try {
-    const calendarIntegration = await integrationRepository.findOne({
-      where: {
-        app_type:
-          IntegrationAppTypeEnum[
-            meeting.calendarAppType as keyof typeof IntegrationAppTypeEnum
-          ],
-      },
-      select: ["id", "app_type", "access_token", "refresh_token", "expiry_date"], // Only select needed fields
-    });
-
-    if (calendarIntegration) {
-      const { calendar, calendarType } = await getCalendarClient(
-        calendarIntegration.app_type,
-        calendarIntegration.access_token,
-        calendarIntegration.refresh_token,
-        calendarIntegration.expiry_date
-      );
-      switch (calendarType) {
-        case IntegrationAppTypeEnum.GOOGLE_MEET_AND_CALENDAR:
-          await calendar.events.delete({
-            calendarId: "primary",
-            eventId: meeting.calendarEventId,
-          });
-          break;
-        default:
-          throw new BadRequestException(
-            `Unsupported calendar provider: ${calendarType}`
-          );
-      }
-    }
-  } catch (error) {
-    throw new BadRequestException("Failed to delete event from calendar");
-  }
+  // No external calendar to delete
 
   meeting.status = MeetingStatus.CANCELLED;
   await meetingRepository.save(meeting);
   return { success: true };
 };
 
-async function getCalendarClient(
-  appType: IntegrationAppTypeEnum,
-  access_token: string,
-  refresh_token: string,
-  expiry_date: number | null
-) {
-  switch (appType) {
-    case IntegrationAppTypeEnum.GOOGLE_MEET_AND_CALENDAR:
-      const validToken = await validateGoogleToken(
-        access_token,
-        refresh_token,
-        expiry_date
-      );
-      googleOAuth2Client.setCredentials({ access_token: validToken });
-      const calendar = google.calendar({
-        version: "v3",
-        auth: googleOAuth2Client,
-      });
-      return {
-        calendar,
-        calendarType: IntegrationAppTypeEnum.GOOGLE_MEET_AND_CALENDAR,
-      };
-    default:
-      throw new BadRequestException(
-        `Unsupported Calendar provider: ${appType}`
-      );
-  }
-}
+// Removed external calendar client logic

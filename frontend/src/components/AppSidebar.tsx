@@ -59,12 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: PROTECTED_ROUTES.MEETINGS,
       icon: CalendarRange,
     },
-    {
-      title: "Integrations & apps",
-      url: PROTECTED_ROUTES.INTEGRATIONS,
-      icon: LayoutGrid,
-      separator: true,
-    },
+    
     {
       title: "User Management",
       url: PROTECTED_ROUTES.ADMIN_USERS,
@@ -90,12 +85,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: PROTECTED_ROUTES.MEETINGS,
       icon: CalendarRange,
     },
-    {
-      title: "Integrations & apps",
-      url: PROTECTED_ROUTES.INTEGRATIONS,
-      icon: LayoutGrid,
-      separator: true,
-    },
+    
   ];
 
   const items = isAdmin ? adminItems : userItems;

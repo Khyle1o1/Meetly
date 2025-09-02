@@ -10,7 +10,6 @@ export const AUTH_ROUTES = {
 
 export const PROTECTED_ROUTES = {
   EVENT_TYPES: "/app/event_types",
-  INTEGRATIONS: "/app/integrations",
   AVAILBILITIY: "/app/availability/schedules",
   MEETINGS: "/app/scheduled_events",
   PACKAGES: "/app/packages",

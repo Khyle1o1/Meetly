@@ -4,7 +4,6 @@ import SignUp from "@/pages/auth/signup";
 import EventType from "@/pages/event_type";
 import Meetings from "@/pages/meeting";
 import Availability from "@/pages/availability";
-import Integrations from "@/pages/integrations";
 import Packages from "@/pages/packages";
 import PendingBookings from "@/pages/admin/pending-bookings";
 import AdminDashboard from "@/pages/admin/dashboard";
@@ -23,7 +22,6 @@ export const protectedRoutePaths = [
   { path: PROTECTED_ROUTES.EVENT_TYPES, element: <EventType /> },
   { path: PROTECTED_ROUTES.MEETINGS, element: <Meetings /> },
   { path: PROTECTED_ROUTES.AVAILBILITIY, element: <Availability /> },
-  { path: PROTECTED_ROUTES.INTEGRATIONS, element: <Integrations /> },
   { path: PROTECTED_ROUTES.PACKAGES, element: <Packages /> },
   { path: PROTECTED_ROUTES.ADMIN_PENDING_BOOKINGS, element: <PendingBookings /> },
   // User dashboard routes

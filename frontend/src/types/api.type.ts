@@ -1,4 +1,4 @@
-import { IntegrationAppType, VideoConferencingPlatform } from "@/lib/types";
+import { VideoConferencingPlatform } from "@/lib/types";
 import { Package } from "./package.type";
 
 export type loginType = { email: string; password: string };
@@ -73,19 +73,7 @@ export interface UserEventListResponse {
   };
 }
 
-//***********Integration */
-export interface IntegrationType {
-  provider: "GOOGLE" | "ZOOM" | "MICROSOFT";
-  title: string;
-  app_type: IntegrationAppType;
-  category: "VIDEO_CONFERENCING" | "CALENDAR";
-  isConnected: boolean;
-}
-
-export interface GetAllIntegrationResponseType {
-  message: string;
-  integrations: IntegrationType[];
-}
+// Integrations removed
 
 //************************* Availablity */
 export interface DayAvailabilityType {

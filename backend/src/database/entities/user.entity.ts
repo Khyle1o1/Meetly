@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import { compareValue, hashValue } from "../../utils/bcrypt";
-import { Integration } from "./integration.entity";
+// Integrations removed
 import { Event } from "./event.entity";
 import { Availability } from "./availability.entity";
 import { Meeting } from "./meeting.entity";
@@ -67,10 +67,7 @@ export class User {
   })
   events: Event[];
 
-  @OneToMany(() => Integration, (integration) => integration.user, {
-    cascade: true,
-  })
-  integrations: Integration[];
+  // Integrations removed
 
   @OneToOne(() => Availability, (availability) => availability.user, {
     cascade: true,

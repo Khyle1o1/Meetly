@@ -22,7 +22,7 @@ import {
   AllBookingsResponseType,
 } from "@/types/api.type";
 import { API, PublicAPI } from "./axios-client";
-import { IntegrationAppType, VideoConferencingPlatform } from "./types";
+import { VideoConferencingPlatform } from "./types";
 
 export const loginMutationFn = async (
   data: loginType
@@ -55,27 +55,7 @@ export const deleteEventMutationFn = async (eventId: string): Promise<{ message:
   return response.data;
 };
 
-//*********** */ INTEGRATION APIS
-
-export const checkIntegrationQueryFn = async (
-  appType: VideoConferencingPlatform
-) => {
-  const response = await API.get(`integration/check/${appType}`);
-  return response.data;
-};
-
-export const getAllIntegrationQueryFn =
-  async (): Promise<GetAllIntegrationResponseType> => {
-    const response = await API.get(`integration/all`);
-    return response.data;
-  };
-
-export const connectAppIntegrationQueryFn = async (
-  appType: IntegrationAppType
-) => {
-  const response = await API.get(`integration/connect/${appType}`);
-  return response.data;
-};
+// Integrations removed
 
 //*********** */ Availability APIS
 
