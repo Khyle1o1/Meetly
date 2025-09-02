@@ -22,8 +22,12 @@ import { PROTECTED_ROUTES } from "@/routes/common/routePaths";
 import { cn } from "@/lib/utils";
 import { LoginResponseType } from "@/types/api.type";
 
+const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 const signInSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .regex(emailRegex, "Invalid email format"),
   password: z.string().min(1, "Password is required"),
 });
 

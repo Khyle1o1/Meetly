@@ -21,11 +21,15 @@ import { toast } from "sonner";
 import { Loader } from "@/components/loader";
 
 // Define the form schema using Zod
+const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 const signUpSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   middleName: z.string().optional(),
-  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .regex(emailRegex, "Invalid email format"),
   phoneNumber: z.string().min(1, "Phone number is required"),
   password: z.string().min(6, "Password must be at least 6 characters."),
 });
@@ -44,7 +48,7 @@ export function SignUpForm({
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
-    mode: "onSubmit",
+    mode: "onChange",
     defaultValues: {
       firstName: "",
       lastName: "",

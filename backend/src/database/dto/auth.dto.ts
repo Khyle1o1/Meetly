@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, MinLength, IsOptional, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, MinLength, IsOptional, IsString, Matches } from "class-validator";
 
 export class RegisterDto {
   @IsNotEmpty()
@@ -13,7 +13,8 @@ export class RegisterDto {
   @IsString()
   middleName?: string;
 
-  @IsEmail()
+  @IsEmail({}, { message: "Invalid email format" })
+  @Matches(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,{ message: "Invalid email format" })
   @IsNotEmpty()
   email: string;
 
@@ -27,7 +28,8 @@ export class RegisterDto {
 }
 
 export class LoginDto {
-  @IsEmail()
+  @IsEmail({}, { message: "Invalid email format" })
+  @Matches(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,{ message: "Invalid email format" })
   @IsNotEmpty()
   email: string;
 
